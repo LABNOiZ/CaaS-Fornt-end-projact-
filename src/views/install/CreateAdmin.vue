@@ -105,13 +105,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-// import PasswordInput from '@/components/PasswordInput.vue' // ❌ ไม่ใช้แล้ว
+// import PasswordInput from '@/components/PasswordInput.vue' //  ไม่ใช้แล้ว
 import PasswordRules from '@/components/PasswordRules.vue'
 import FormAlert from '@/components/FormAlert.vue'
 import { authService } from '@/services/authService'
 import bgLogin from '@/assets/bg-login_1.png'
 import { ArrowPathIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/solid' // ✅ Import Icons
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/solid' 
 
 const router = useRouter()
 const firstNameTh = ref('')

@@ -22,7 +22,6 @@
 
 <script setup>
 import { ref } from 'vue'
-// ✅ Import ไอคอนเข้ามาใช้งาน
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 defineProps({

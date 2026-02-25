@@ -25,10 +25,11 @@ export const updateWebUser = (userid, data) => {
   })
 }
 
-// ระงับ ผู้ใช้ 
-export const deleteWebUser = (userid) => {
+//  ระงับ ผู้ใช้ 
+export const deleteWebUser = (userId, password) => {
   return api.patch('/web/users/delete', {
-    userId: userid
+    userId: userId,
+    password: password 
   })
 }
 

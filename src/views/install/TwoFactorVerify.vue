@@ -114,7 +114,7 @@ import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 const router = useRouter()
 const route = useRoute()
 
-// ✅ State ใหม่สำหรับ OTP แยกช่อง
+//  State ใหม่สำหรับ OTP แยกช่อง
 const otpDigits = ref(['', '', '', '', '', '']) 
 const otpInputs = ref([]) 
 

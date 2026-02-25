@@ -23,3 +23,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Certificates and Private Keys
+*.pem
+*.crt
+certs/

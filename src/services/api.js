@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router from '@/router' // นำเข้า router เพื่อความเนียนในการเปลี่ยนหน้า
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -8,11 +9,11 @@ const api = axios.create({
   timeout: 60000,
 })
 
-// --- ตัวแปรสำหรับระบบ Lock ---
+// --- ตัวแปรสำหรับระบบ Lock และ Queue ---
 let isRefreshing = false;
 let failedQueue = [];
 
-// ฟังก์ชันสำหรับจัดการ Request ที่ค้างอยู่
+// ฟังก์ชันสำหรับจัดการ Request ที่ค้างอยู่ (แก้ให้ Robust ขึ้น)
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -24,11 +25,12 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request Interceptor
+// --- Request Interceptor ---
 api.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('token')
-    // เช็คว่าไม่ใช่ Path สำหรับ Login/Refresh เพื่อกัน Loop
+    
+    // เช็ค Path ให้แม่นยำขึ้นเพื่อป้องกัน Loop
     const isAuthPath = config.url.includes('/login') || config.url.includes('/refresh-token')
 
     if (token && !isAuthPath) {
@@ -39,16 +41,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response Interceptor
+// --- Response Interceptor ---
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // ถ้า Error 401 หรือ 403 และยังไม่เคย Retry
+    // ถ้าเจอ 401 หรือ 403 และยังไม่เคยลอง Retry ใน Request นี้
     if (error.response && (error.response.status === 401 || error.response.status === 403) && !originalRequest._retry) {
       
-      // กรณีที่มีการ Refresh อยู่แล้ว ให้เข้าคิวรอ
+      // 1. ถ้ากำลัง Refresh อยู่ ให้เข้าคิวรอ Token ใหม่
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -60,6 +62,7 @@ api.interceptors.response.use(
         .catch(err => Promise.reject(err));
       }
 
+      // 2. เริ่มกระบวนการ Refresh Token
       originalRequest._retry = true;
       isRefreshing = true;
 
@@ -67,48 +70,51 @@ api.interceptors.response.use(
         const refreshToken = sessionStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error("No refresh token available");
 
-        console.log("Attempting Refresh Token...");
+        console.log(" Attempting to Refresh Token...");
 
-        // ยิง Refresh Token
+        // ใช้ axios ตัวหลักยิงไปที่ Endpoint (ไม่ใช้ api instance เพื่อเลี่ยง interceptor ตัวเอง)
         const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/web/auth/refresh-token`, {
             refreshToken: refreshToken
         });
 
-        //  จุดสำคัญ: เช็คโครงสร้างข้อมูลให้ดี
-        // บางที Server ส่งมาใน response.data.data หรือ response.data เฉยๆ
         const data = response.data.data || response.data; 
-        
         const newToken = data.accessToken || data.token;
         const newRefreshToken = data.refreshToken;
 
         if (newToken) {
-            // 1. เก็บ Token ใหม่
+            //  เก็บ Token ใหม่
             sessionStorage.setItem('token', newToken);
             
-            //  2. สำคัญมาก: ต้องเก็บ Refresh Token ตัวใหม่ด้วย (ถ้ามี)
-            // เพราะตัวเก่าใช้ไม่ได้แล้ว (One-time use)
+            //  อัปเดต Refresh Token ตัวใหม่ (ถ้า Backend ส่งมาให้)
             if (newRefreshToken) {
-                console.log("Updated new Refresh Token");
                 sessionStorage.setItem('refreshToken', newRefreshToken);
             }
 
-            // 3. อัปเดต Header
+            //  อัปเดต Header สำหรับ Request ถัดๆ ไป
             api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-
-            // 4. เคลียร์คิวที่รออยู่ให้ทำงานต่อ
+            
+            //  ปล่อย Request ที่ค้างอยู่ในคิวทั้งหมด
             processQueue(null, newToken);
             
+            //  ยิง Request เดิมซ้ำอีกครั้งด้วย Token ใหม่
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
             return api(originalRequest);
         } else {
-            throw new Error("No access token in response");
+            throw new Error("Invalid response structure from Refresh Token API");
         }
 
       } catch (err) {
-        console.error("Refresh failed:", err);
+        //  ถ้า Refresh ไม่สำเร็จ ให้เคลียร์คิวและเตะไปหน้า Login
         processQueue(err, null);
         sessionStorage.clear();
-        window.location.href = '/login';
+        
+        // ใช้ router.replace จะเนียนกว่า window.location ใน Vue
+        if (router) {
+            router.replace('/login');
+        } else {
+            window.location.href = '/login';
+        }
+        
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

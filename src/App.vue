@@ -56,8 +56,8 @@ const countdown = ref(30)
 let idleTimer = null
 let warningInterval = null
 
-// ตั้งเวลา Idle (5 นาที)
-const IDLE_LIMIT = 3 * 60 * 1000 
+// ตั้งเวลา Idle  นาที Testt
+const IDLE_LIMIT = 10 * 60 * 1000 
 // ตั้งเวลานับถอยหลังแจ้งเตือน (30 วินาที)
 const WARNING_LIMIT = 30 
 

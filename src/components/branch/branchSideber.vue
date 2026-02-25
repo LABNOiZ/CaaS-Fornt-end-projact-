@@ -1,57 +1,61 @@
 <template>
-  <aside class="w-72 bg-white flex flex-col h-full font-prompt border-r border-gray-100 overflow-hidden">
-
-    <nav class="p-4 space-y-2 flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-      
-      <router-link 
-        to="/branch/dashboard" 
-        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:pl-6"
-        active-class="bg-blue-50 text-blue-600 font-bold shadow-sm"
-      >
-        <HomeIcon class="w-6 h-6 flex-shrink-0" />
-        <span class="text-base truncate">Dashboard</span>
-      </router-link>
-      
-      <router-link 
-        to="/branch/approval" 
-        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:pl-6"
-        active-class="bg-blue-50 text-blue-600 font-bold shadow-sm"
-      >
-        <ClipboardDocumentCheckIcon class="w-6 h-6 flex-shrink-0" />
-        <span class="text-base truncate">อนุมัติคำร้องขอ</span>
-      </router-link>
-
-      <router-link 
-        to="/branch/settings" 
-        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:pl-6"
-        active-class="bg-blue-50 text-blue-600 font-bold shadow-sm"
-      >
-        <CogIcon class="w-6 h-6 flex-shrink-0" />
-        <span class="text-base truncate">การตั้งค่า</span>
-      </router-link>
-
-      <div class="pt-4 mt-2 border-t border-gray-100">
-        <button @click="handleLogout" 
-          class="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 font-bold flex justify-center items-center gap-2 transition-all duration-200 shadow-sm">
-           <span class="text-base">ออกจากระบบ</span>
-          <ArrowRightOnRectangleIcon class="w-5 h-5" />
-        </button>
-      </div>
+  <aside class="w-72 h-full bg-white border-r border-gray-100 shadow-sm flex flex-col font-sans">
     
+    <nav class="flex-1 overflow-y-auto py-6">
+      <div class="px-6 mb-3 text-[10px] font-extrabold text-blue-600/60 tracking-widest uppercase text-left">
+        สาขาบริหาร
+      </div>
+      
+      <ul class="space-y-1.5 mb-8">
+        <li v-for="menu in primaryMenus" :key="menu.to">
+          <router-link 
+            :to="menu.to" 
+            class="flex items-center px-6 py-3 mx-3 rounded-xl transition-all duration-300 group text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:pl-8"
+            active-class="bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:pl-6"
+          >
+            <component :is="menu.icon" class="h-5 w-5 mr-3 transition-transform group-hover:scale-110 flex-shrink-0" />
+            <span class="text-sm font-bold truncate">{{ menu.label }}</span>
+          </router-link>
+        </li>
+      </ul>
+
+      <div class="px-6 mb-3 text-[10px] font-extrabold text-blue-600/60 tracking-widest uppercase text-left">
+        การตั้งค่า
+      </div>
+      
+      <ul class="space-y-1.5">
+        <li>
+          <router-link 
+            to="/branch/settings"
+            class="flex items-center px-6 py-3 mx-3 rounded-xl transition-all duration-300 group text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:pl-8"
+            active-class="bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:pl-6"
+          >
+            <CogIcon class="h-5 w-5 mr-3 transition-transform group-hover:scale-110 flex-shrink-0" />
+            <span class="text-sm font-bold truncate">การตั้งค่า</span>
+          </router-link>
+        </li>
+      </ul>
     </nav>
+
+    <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+      <button @click="handleLogout" class="w-full bg-red-50 text-red-600 py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-extrabold shadow-sm flex justify-center items-center gap-2 group">
+        <span>ออกจากระบบ</span>
+        <ArrowRightOnRectangleIcon class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+      </button>
+    </div>
   </aside>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { 
-  HomeIcon, 
-  ClipboardDocumentCheckIcon, 
-  CogIcon, 
-  ArrowRightOnRectangleIcon 
-} from '@heroicons/vue/24/outline'
+import { HomeIcon, ClipboardDocumentCheckIcon, CogIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
+
+const primaryMenus = [
+  { to: '/branch/dashboard', label: 'Dashboard', icon: HomeIcon },
+  { to: '/branch/approval', label: 'อนุมัติคำร้องขอ', icon: ClipboardDocumentCheckIcon },
+]
 
 const handleLogout = () => {
   sessionStorage.removeItem('token')
@@ -59,18 +63,3 @@ const handleLogout = () => {
   router.push('/login')
 }
 </script>
-
-<style scoped>
-/* ซ่อน Scrollbar ทุกกรณี */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.font-prompt {
-  font-family: 'Prompt', sans-serif;
-}
-</style>

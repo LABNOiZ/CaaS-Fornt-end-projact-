@@ -82,7 +82,7 @@
             <div v-if="isError" class="bg-red-500/20 border border-red-500/50 rounded-lg p-2.5 ">
               <p class="text-red-200 text-sm font-bold text-center flex items-center justify-center gap-2">
                 <ExclamationCircleIcon class="w-4 h-4 flex-shrink-0" />
-                <span class="truncate">{{ errorMessage || 'Email หรือ Password ไม่ถูกต้อง' }}</span>
+                <span>{{ errorMessage || 'Email หรือ Password ไม่ถูกต้อง' }}</span>
               </p>
             </div>
           </transition>
@@ -198,21 +198,33 @@ const handleLogin = async () => {
   } catch (error) {
     console.error("Login Error:", error)
     isError.value = true
-    if (error.response && error.response.data) {
-        errorMessage.value = error.response.data.message || 'Email หรือ Password ไม่ถูกต้อง'
-    } else if (error.message) {
-        errorMessage.value = error.message
+    
+    //  อัปเดตการดักจับ Error ให้ครอบคลุมทุกเคสและเป็นภาษาไทย
+    if (error.response) {
+        // มีการตอบกลับมาจาก Server แต่เป็น Error (เช่น 400, 401, 500)
+        const status = error.response.status
+        const serverMsg = error.response.data?.error || error.response.data?.message
+        
+        if (status === 401 || status === 400) {
+            errorMessage.value = serverMsg || 'Email หรือ Password ไม่ถูกต้อง'
+        } else if (status === 500) {
+            errorMessage.value = 'ระบบขัดข้องชั่วคราว ไม่สามารถเชื่อมต่อ Server ได้ '
+        } else {
+            errorMessage.value = serverMsg || `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (Code: ${status})`
+        }
+    } else if (error.request) {
+        // ส่ง Request ไปแล้ว แต่ไม่ได้ Response กลับมา (Server ปิด, เน็ตพัง)
+        errorMessage.value = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต'
     } else {
-        errorMessage.value = 'ไม่สามารถเชื่อมต่อ Server ได้'
+        // Error อื่นๆ
+        errorMessage.value = 'เกิดข้อผิดพลาด: ' + error.message
     }
   } finally {
     isLoading.value = false
   }
 }
 
-
 const handleRedirect = (roleId) => {
-    
     // Case 1: Role 6 = Default (Installer)
     if (roleId === 6) {
         sessionStorage.setItem('is_installer', 'true')

@@ -53,7 +53,7 @@ const router = createRouter({
         { path: 'login', name: 'Login', component: LoginView },
         { path: 'login-2fa', name: 'LoginTwoFactor', component: LoginTwoFactor }, 
         
-        // ✅ 2. เพิ่ม Route สำหรับหน้าลืมรหัสผ่าน
+        //  2. เพิ่ม Route สำหรับหน้าลืมรหัสผ่าน
         { path: 'forgot-password', name: 'ForgotPassword', component: ForgotPassword },
 
         { path: 'install/create-admin', name: 'CreateAdmin', component: CreateAdmin },
@@ -132,7 +132,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // Case 2: Login อยู่แล้ว แต่อยากกลับมาหน้า Login (หรือหน้า Forgot Password)
-  // ✅ เพิ่ม forgot-password เข้าไปในเงื่อนไข เพื่อไม่ให้คน Login แล้วเข้าไปหน้ากู้รหัส
+  //  เพิ่ม forgot-password เข้าไปในเงื่อนไข เพื่อไม่ให้คน Login แล้วเข้าไปหน้ากู้รหัส
   if ((to.path === '/login' || to.path === '/forgot-password') && token) {
       if (isInstaller) {
         next('/install/create-admin')

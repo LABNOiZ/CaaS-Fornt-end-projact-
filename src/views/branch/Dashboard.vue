@@ -94,7 +94,7 @@ const fetchDashboardData = async () => {
     console.error("Error fetching dashboard stats:", error)
   } finally {
     isLoading.value = false
-    // ✅ อัปเดตวันที่และเวลาพร้อมกัน (Format: 30/01/2569 14:30)
+    //  อัปเดตวันที่และเวลาพร้อมกัน (Format: 30/01/2569 14:30)
     const now = new Date()
     currentDateTime.value = now.toLocaleString('th-TH', {
         day: '2-digit',

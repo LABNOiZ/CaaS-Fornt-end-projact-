@@ -1,41 +1,46 @@
 <template>
-  <aside class="w-64 bg-white shadow-md flex flex-col z-20 h-screen">
-    <nav 
-      class="flex-2 p-5 space-y-2 overflow-y-auto">
-      <router-link 
-        to="/callcenter/search-customer" 
-        class="flex items-center gap-3 px-6 py-3 mx-2 rounded-lg transition-colors duration-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-        active-class="bg-blue-50 text-blue-600 font-bold"
-      >
-        <MagnifyingGlassIcon class="w-6 h-6" />
-        <span class="text-base">ค้นหาลูกค้า</span>
-      </router-link>
-      
-      <router-link 
-        to="/callcenter/customer-history" 
-        class="flex items-center gap-3 px-6 py-3 mx-2 rounded-lg transition-colors duration-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-        active-class="bg-blue-50 text-blue-600 font-bold"
-      >
-        <ClockIcon class="w-6 h-6" />
-        <span class="text-base">ดูประวัติลูกค้า</span>
-      </router-link>
-
-      <router-link 
-        to="/callcenter/settings/profile" 
-        class="flex items-center gap-3 px-6 py-3 mx-2 rounded-lg transition-colors duration-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-        active-class="bg-blue-50 text-blue-600 font-bold"
-        >
-          <CogIcon class="w-6 h-6" />
-          <span class="text-base">ตั้งค่าส่วนตัว</span>
-        </router-link>
+  <aside class="w-72 h-full bg-white border-r border-gray-100 shadow-sm flex flex-col font-sans">
     
+    <nav class="flex-1 overflow-y-auto py-6">
+      <div class="px-6 mb-3 text-[10px] font-extrabold text-blue-600/60 tracking-widest uppercase">
+        บริการลูกค้า
+      </div>
+      
+      <ul class="space-y-1.5 mb-8">
+        <li v-for="menu in primaryMenus" :key="menu.to">
+          <router-link 
+            :to="menu.to" 
+            class="flex items-center px-6 py-3 mx-3 rounded-xl transition-all duration-300 group text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:pl-8"
+            active-class="bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:pl-6"
+          >
+            <component :is="menu.icon" class="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+            <span class="text-sm font-bold">{{ menu.label }}</span>
+          </router-link>
+        </li>
+      </ul>
+
+      <div class="px-6 mb-3 text-[10px] font-extrabold text-blue-600/60 tracking-widest uppercase">
+        การตั้งค่า
+      </div>
+      
+      <ul class="space-y-1.5">
+        <li>
+          <router-link 
+            to="/callcenter/settings/profile"
+            class="flex items-center px-6 py-3 mx-3 rounded-xl transition-all duration-300 group text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:pl-8"
+            active-class="bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:pl-6"
+          >
+            <CogIcon class="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+            <span class="text-sm font-bold">ตั้งค่าส่วนตัว</span>
+          </router-link>
+        </li>
+      </ul>
     </nav>
 
-    <div class="p-4 border-t">
-      <button @click="handleLogout" 
-        class="w-full bg-gray-200 text-gray-700 py-4 rounded-md hover:bg-gray-300 font-bold flex justify-center items-center gap-2 transition">
-         <span class="text-lg">ออกจากระบบ</span>
-        <ArrowRightOnRectangleIcon class="w-5 h-5" />
+    <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+      <button @click="handleLogout" class="w-full bg-red-50 text-red-600 py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-extrabold shadow-sm flex justify-center items-center gap-2 group">
+        <span>ออกจากระบบ</span>
+        <ArrowRightOnRectangleIcon class="w-4 h-4 transition-transform group-hover:translate-x-1" />
       </button>
     </div>
   </aside>
@@ -43,15 +48,14 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-
-import { 
-  MagnifyingGlassIcon, 
-  ClockIcon, 
-  ArrowRightOnRectangleIcon,
-  CogIcon 
-} from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, ClockIcon, CogIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
+
+const primaryMenus = [
+  { to: '/callcenter/search-customer', label: 'ค้นหาลูกค้า', icon: MagnifyingGlassIcon },
+  { to: '/callcenter/customer-history', label: 'ดูประวัติลูกค้า', icon: ClockIcon },
+]
 
 const handleLogout = () => {
   sessionStorage.removeItem('token')

@@ -115,7 +115,7 @@ import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 
-// ✅ State สำหรับ OTP แยกช่อง
+//  State สำหรับ OTP แยกช่อง
 const otpDigits = ref(['', '', '', '', '', '']) 
 const otpInputs = ref([]) 
 
@@ -196,7 +196,7 @@ const handleVerify = async () => {
     sessionStorage.clear() 
     sessionStorage.setItem('token', token)
     
-    // 🔹 เก็บ Refresh Token (เพิ่มตามที่คุณเคยขอก่อนหน้านี้)
+    //  เก็บ Refresh Token (เพิ่มตามที่คุณเคยขอก่อนหน้านี้)
     if (data.refreshToken) {
         sessionStorage.setItem('refreshToken', data.refreshToken)
     }

@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen w-full bg-gray-50">
+  <div class="min-h-screen w-full bg-[#F3F4F6] font-sans text-gray-800">
 
-    <nav class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-50 flex items-center px-4">
+    <div class="fixed top-0 left-0 right-0 z-50">
       <Navbar title="Branch Manager" />
-    </nav>
+    </div>
 
     <aside class="fixed left-0 top-16 bottom-0 w-72 bg-white border-r border-gray-100 z-40 hidden lg:block">
       <BranchSidebar />
     </aside>
 
     <main class="pt-16 lg:pl-72 min-h-screen w-full transition-all duration-300">
-      <div class="p-6">
+      <div class="p-8">
         <router-view />
       </div>
     </main>
