@@ -208,6 +208,7 @@ watch(() => props.userToEdit, (newUser) => {
 const handleSubmit = async () => {
   formError.value = ''
   
+  // เช็ครหัสผ่านตอนสร้างใหม่
   if (!isEditMode.value) {
      if (form.value.password !== form.value.confirmPassword) {
        formError.value = 'รหัสผ่านไม่ตรงกัน'; return 
@@ -224,7 +225,7 @@ const handleSubmit = async () => {
     firstNameTh: form.value.firstNameTh,
     lastNameTh: form.value.lastNameTh,
     roleId: form.value.roleId,
-    branchCode: isBranchManagerSelected.value ? form.value.branchNumber : ""
+    branchCode: isBranchManagerSelected.value ? form.value.branchNumber : null
   }
 
   try {
@@ -232,6 +233,7 @@ const handleSubmit = async () => {
       await updateWebUser(props.userToEdit.id, payload)
       emit('success', 'แก้ไขข้อมูลสำเร็จ')
     } else {
+      // แนบรหัสผ่านไปเฉพาะตอนสร้างบัญชีใหม่
       await createWebUser({ ...payload, password: form.value.password })
       emit('success', 'สร้าง User สำเร็จ')
     }

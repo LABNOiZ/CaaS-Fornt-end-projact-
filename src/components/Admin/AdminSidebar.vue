@@ -43,6 +43,8 @@
 import { useRouter, useRoute } from 'vue-router'
 import { computed } from 'vue'
 import { HomeIcon, GlobeAltIcon, ClockIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
+// 🌟 นำเข้า authService 
+import { authService } from '@/services/authService'
 
 const router = useRouter()
 const route = useRoute()
@@ -53,5 +55,16 @@ const primaryMenus = [
   { to: '/admin/admin-history', label: 'ประวัติแอดมิน', icon: ClockIcon },
 ]
 const isSettings = computed(() => route.path.includes('/settings'))
-const logout = () => { sessionStorage.clear(); router.push('/login') }
+
+// 🌟 ปรับปรุงฟังก์ชัน Logout ให้ยิง API
+const logout = async () => {
+  try {
+    await authService.logout()
+  } catch (error) {
+    console.warn("Logout API Error:", error)
+  } finally {
+    sessionStorage.clear() 
+    router.push('/login') 
+  }
+}
 </script>

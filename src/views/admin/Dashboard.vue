@@ -80,20 +80,6 @@
                </div>
             </div>
 
-            <div class="bg-white border border-purple-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-               <div class="absolute right-0 top-0 w-16 h-16 bg-purple-50 rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110"></div>
-               <div class="relative z-10">
-                  <div class="flex items-center justify-between mb-3">
-                     <div class="bg-purple-100 p-2 rounded-lg text-purple-600">
-                        <BuildingStorefrontIcon class="h-6 w-6" />
-                     </div>
-                  </div>
-                  <div class="text-3xl font-bold text-gray-800">{{ formatNumber(stats.totalBranchManagers) }}</div>
-                  <div class="text-sm font-medium text-gray-500 mt-1">Branch Managers</div>
-                  <p class="text-xs text-gray-400">ผู้จัดการสาขา</p>
-               </div>
-            </div>
-
             <div class="bg-white border border-pink-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
                <div class="absolute right-0 top-0 w-16 h-16 bg-pink-50 rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110"></div>
                <div class="relative z-10">
@@ -107,7 +93,20 @@
                   <p class="text-xs text-gray-400">เจ้าหน้าที่บริการ</p>
                </div>
             </div>
-
+            
+            <div class="bg-white border border-purple-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+               <div class="absolute right-0 top-0 w-16 h-16 bg-purple-50 rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110"></div>
+               <div class="relative z-10">
+                  <div class="flex items-center justify-between mb-3">
+                     <div class="bg-purple-100 p-2 rounded-lg text-purple-600">
+                        <BuildingStorefrontIcon class="h-6 w-6" />
+                     </div>
+                  </div>
+                  <div class="text-3xl font-bold text-gray-800">{{ formatNumber(stats.totalBranchManagers) }}</div>
+                  <div class="text-sm font-medium text-gray-500 mt-1">Branch Managers</div>
+                  <p class="text-xs text-gray-400">ผู้จัดการสาขา</p>
+               </div>
+            </div>
          </div>
       </div>
 

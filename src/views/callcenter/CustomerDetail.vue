@@ -1,192 +1,266 @@
-<template>
-  <div class="p-6 bg-gray-50 min-h-screen font-sans relative">
-    
-    <transition name="slide-fade">
-      <div v-if="alert.show" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] min-w-[350px]">
-        <div :class="['alert p-4 rounded-xl shadow-lg flex items-center gap-3 border', alert.type === 'success' ? 'bg-green-100 border-green-200 text-green-800' : 'bg-red-100 border-red-200 text-red-800']">
-           <span v-if="alert.type === 'success'" class="bg-green-200 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></span>
-           <span v-else class="bg-red-200 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
-           <span class="font-bold text-sm">{{ alert.message }}</span>
+<template>    
+    <div class="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+      <transition 
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 -translate-y-4 scale-95"
+        enter-to-class="opacity-100 translate-y-0 scale-100"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0 scale-100"
+        leave-to-class="opacity-0 -translate-y-4 scale-95"
+      >
+        <div v-if="alert.show" class="pointer-events-auto min-w-[350px]">
+          <div :class="['p-4 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-md', alert.type === 'success' ? 'bg-green-50/90 border-green-200 text-green-800' : 'bg-red-50/90 border-red-200 text-red-800']">
+             <span v-if="alert.type === 'success'" class="bg-green-500 text-white p-1 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></span>
+             <span v-else class="bg-red-500 text-white p-1 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
+             <span class="font-bold text-sm tracking-wide">{{ alert.message }}</span>
+          </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </div>
 
-    <div class="flex flex-col lg:flex-row gap-6 items-start">
+    <div class="flex flex-col lg:flex-row gap-6 items-start pb-10">
       
       <div class="w-full lg:w-1/4 flex flex-col gap-6">
-        <div class="flex items-center gap-2 h-[50px]"> 
-          <button @click="goBack" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-full hover:bg-gray-100 transition shadow-sm flex-shrink-0">
+        <div class="flex items-center gap-3 h-[50px]"> 
+          <button @click="goBack" class="bg-white border border-gray-200 text-gray-700 p-2.5 rounded-xl hover:bg-gray-50 transition shadow-sm flex-shrink-0">
             <ArrowLeftIcon class="w-4 h-4" />
           </button>
-          <div class="flex flex-wrap items-center gap-1 text-gray-500">
-            <h1 class="text-lg font-bold text-gray-400 cursor-pointer hover:text-blue-500" @click="goBack">ค้นหา</h1>
-            <span class="text-lg text-gray-300">/</span>
-            <span class="text-blue-600 font-bold text-lg">รายละเอียด</span>
+          <div class="flex flex-wrap items-center gap-2 text-gray-500">
+            <h1 class="text-sm font-bold text-gray-400 cursor-pointer hover:text-blue-600 transition" @click="goBack">ค้นหา</h1>
+            <span class="text-sm text-gray-300">/</span>
+            <span class="text-blue-600 font-bold text-lg tracking-tight">รายละเอียด</span>
           </div>
         </div>
 
-        <div v-if="customer" class="bg-blue-50 p-6 rounded-2xl shadow-sm border border-blue-100 relative overflow-hidden">
-          <div class="absolute left-0 top-6 bottom-6 w-1.5 bg-blue-500 rounded-r-lg"></div>
-          <h2 class="text-xl font-bold text-blue-500 mb-4 pl-3">ข้อมูลส่วนตัว</h2>
-          <div class="space-y-3 pl-3">
-            <div><p class="text-gray-400 text-xs">ชื่อ-นามสกุล ไทย</p><p class="text-lg font-bold text-gray-800 leading-tight">{{ customer.fullNameTh }}</p></div>
-            <div><p class="text-gray-400 text-xs">ชื่อ-นามสกุล อังกฤษ</p><p class="text-lg font-bold text-gray-800 leading-tight">{{ customer.fullNameEn }}</p></div>
-            <div><p class="text-gray-400 text-xs">อีเมล</p><p class="text-base font-bold text-gray-800 break-words leading-tight">{{ customer.email }}</p></div>
-            <div><p class="text-gray-400 text-xs">เบอร์โทรศัพท์</p><p class="text-base font-bold text-gray-800">{{ customer.mobileNumber }}</p></div>
-            <div><p class="text-gray-400 text-xs">เลขบัตรประชาชน</p><p class="text-base font-bold text-gray-800">{{ customer.citizenId }}</p></div>
+        <div v-if="customer" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+          <h2 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm">👤</span>
+            ข้อมูลส่วนตัว
+          </h2>
+          <div class="space-y-4">
+            <div><p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">ชื่อ-นามสกุล ไทย</p><p class="text-sm font-bold text-gray-800 leading-tight">{{ customer.fullNameTh }}</p></div>
+            <div><p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">ชื่อ-นามสกุล อังกฤษ</p><p class="text-sm font-bold text-gray-800 leading-tight uppercase">{{ customer.fullNameEn }}</p></div>
+            <div><p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">อีเมล</p><p class="text-sm font-bold text-gray-800 break-words leading-tight">{{ customer.email }}</p></div>
+            <div><p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">เบอร์โทรศัพท์</p><p class="text-sm font-bold text-gray-800">{{ customer.mobileNumber }}</p></div>
+            <div><p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">เลขบัตรประชาชน</p><p class="text-sm font-bold text-gray-800">{{ customer.citizenId }}</p></div>
           </div>
         </div>
         
         <div v-else class="p-10 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
-          <div class="loading loading-spinner loading-md mb-2"></div>
-          <p>กำลังโหลดข้อมูล...</p>
+          <div class="loading loading-spinner loading-md mb-2 text-blue-500"></div>
+          <p class="text-sm font-medium">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
 
       <div class="w-full lg:w-3/4 flex flex-col gap-6">
         
-        <div class="flex bg-white p-1 rounded-xl shadow-sm w-fit border h-[50px] items-center">
-          <button @click="changeTab('virtual')" :class="activeTab === 'virtual' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'" class="px-6 py-2 rounded-lg font-bold transition-all duration-200 h-full flex items-center">Virtual Card</button>
-          <button @click="changeTab('physical')" :class="activeTab === 'physical' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'" class="px-6 py-2 rounded-lg font-bold transition-all duration-200 h-full flex items-center">Physical Card</button>
+        <div class="flex bg-white p-1.5 rounded-xl shadow-sm w-fit border border-gray-100 items-center">
+          <button @click="changeTab('virtual')" :class="activeTab === 'virtual' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Virtual Card</button>
+          <button @click="changeTab('physical')" :class="activeTab === 'physical' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200">Physical Card</button>
         </div>
 
         <div v-if="customer">
-          <div class="space-y-4 min-h-[580px]">
+          
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 min-h-[580px] content-start">
             
             <div v-for="card in paginatedCards" :key="card.cardId" 
-                 class="bg-white rounded-2xl relative shadow-sm border transition hover:shadow-md animate-fade-in flex flex-col overflow-hidden" 
-                 :class="showAddressRequestBox(card.cardId) ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-200'">
+                 class="bg-white rounded-3xl shadow-sm border transition-all duration-300 hover:shadow-md flex flex-col h-full transform hover:-translate-y-1" 
+                 :class="showAddressRequestBox(card.cardId) ? 'border-blue-400 ring-2 ring-blue-400/20' : 'border-gray-200'">
               
-              <div class="relative p-6 min-h-[180px] flex flex-col justify-end"
-                   :class="!(card.cardImage || card.card_image) ? 'bg-gradient-to-tr from-slate-700 to-gray-900' : 'bg-gray-800'">
+              <div class="relative p-6 sm:p-8 flex flex-col justify-between overflow-hidden rounded-t-3xl aspect-[1.586/1] bg-gradient-to-br from-slate-700 to-slate-900 shadow-inner">
                   
                   <div v-if="card.cardImage || card.card_image" 
-                       class="absolute inset-0 z-0 bg-cover bg-center"
+                       class="absolute inset-0 z-0 bg-cover bg-center opacity-70 mix-blend-overlay"
                        :style="{ backgroundImage: `url(${card.cardImage || card.card_image})` }">
                   </div>
-                  <div v-if="card.cardImage || card.card_image" class="absolute inset-0 z-0 bg-black/25"></div>
-
-                  <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
-                     <span class="text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-2 transition-all duration-300 shadow-sm backdrop-blur-md"
+                  <div class="relative z-10 flex justify-end items-start">
+                     <span class="text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-md border border-white/20"
                            :class="getCardStatusBadge(card).bg + ' ' + getCardStatusBadge(card).text">
                         {{ getCardStatusBadge(card).label }}
-                        <span class="w-2.5 h-2.5 rounded-full shadow-sm" :class="getCardStatusBadge(card).dot"></span>
+                        <span class="w-1.5 h-1.5 rounded-full shadow-sm animate-pulse" :class="getCardStatusBadge(card).dot"></span>
                      </span>
                   </div>
 
-                  <div class="relative z-10 mt-6">
-                    <p class="text-white/80 text-[10px] mb-0.5 drop-shadow-md">เลขบัตร</p>
-                    <p class="text-2xl font-bold text-white tracking-widest font-mono drop-shadow-lg">
-                     {{ formatCardNumber(card.cardNumber) }}
+                  <div class="relative z-10 mt-auto pt-4">
+                    <div class="flex justify-between items-end mb-1">
+                      <p class="text-white/90 text-[10px] font-medium drop-shadow-sm">เลขบัตร</p>
+                      
+                      <button @click="toggleCardNumber(card)" 
+                              class="text-white/70 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all flex items-center justify-center min-w-[28px] min-h-[28px]"
+                              title="แสดง/ซ่อนเลขบัตร"
+                              :disabled="isLoadingSensitive[card.cardId]">
+                        <span v-if="isLoadingSensitive[card.cardId]" class="loading loading-spinner loading-xs text-white"></span>
+                        <template v-else>
+                            <EyeIcon v-if="!revealedCards[card.cardId]" class="w-4 h-4" />
+                            <EyeSlashIcon v-else class="w-4 h-4" />
+                        </template>
+                      </button>
+                    </div>
+
+                    <p class="text-xl sm:text-2xl font-extrabold text-white tracking-[0.15em] sm:tracking-[0.2em] font-mono drop-shadow-md transition-all duration-300">
+                     {{ formatCardNumber(revealedCards[card.cardId] ? card.fullCardNumber : (card.cardNumber || card.card_number || card.cardNo), revealedCards[card.cardId]) }}
                     </p>
                   </div>
                   
-                  <div class="relative z-10 mt-3 flex justify-between items-end">
+                  <div class="relative z-10 mt-4 flex justify-between items-end">
                      <div>
-                        <p class="text-white/80 text-[10px] drop-shadow-md">ชื่อบนบัตร</p>
-                        <p class="text-white font-bold text-base uppercase drop-shadow-lg tracking-wide">{{ card.holderName }}</p>
+                        <p class="text-white/90 text-[9px] mb-0.5 font-medium drop-shadow-sm">ชื่อบนบัตร</p>
+                        <p class="text-white font-bold text-sm uppercase tracking-widest drop-shadow-md">{{ card.holderName }}</p>
                      </div>
-                     <div class="text-right">
-                        <p class="text-white/80 text-[10px] drop-shadow-md">EXP</p>
-                        <p class="text-white font-bold text-sm drop-shadow-lg tracking-wider">{{ formatDate(card.expiry) }}</p>
+                     <div class="flex gap-4 pr-2">
+                        <div v-if="revealedCards[card.cardId] && card.cvv" class="text-right">
+                           <p class="text-white/90 text-[9px] mb-0.5 font-medium drop-shadow-sm">CVV</p>
+                           <p class="text-white font-bold text-sm tracking-widest drop-shadow-md font-mono">{{ card.cvv }}</p>
+                        </div>
+                        <div class="text-right">
+                           <p class="text-white/90 text-[9px] mb-0.5 font-medium drop-shadow-sm">EXP</p>
+                           <p class="text-white font-bold text-sm tracking-widest drop-shadow-md font-mono">
+                               {{ formatDate(revealedCards[card.cardId] ? card.fullExpiry : card.expiry) }}
+                           </p>
+                        </div>
                      </div>
                   </div>
               </div>
 
-              <div class="p-4 bg-gray-50 flex flex-col gap-3">
+              <div class="p-5 bg-gray-50/80 flex-1 flex flex-col gap-4 rounded-b-3xl border-t border-gray-100">
                 
-                <div v-if="!isCardVirtual(card) && card.status === 'inactive'" class="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                    <div class="bg-blue-100 p-1.5 rounded-lg">
+                <div v-if="!isCardVirtual(card) && card.status === 'inactive'" class="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm">
+                    <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
                         <TruckIcon class="w-4 h-4 text-blue-600"/>
                     </div>
-                    <span class="text-xs text-gray-500 font-medium">สถานะขนส่ง:</span>
-                    <span class="text-xs font-bold" :class="getDeliveryStatusColor(card.cardId)">
-                        {{ getDeliveryStatusText(card.cardId) }}
-                    </span>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">สถานะการจัดส่งบัตร</span>
+                        <span class="text-xs font-extrabold" :class="getDeliveryStatusColor(card.cardId)">
+                            {{ getDeliveryStatusText(card.cardId) }}
+                        </span>
+                    </div>
                 </div>
 
-                <div v-if="card.status === 'active' && !isCardVirtual(card)" class="flex justify-end items-center">
-                    <button @click="openSuspendModal(card)" class="bg-purple-600 hover:bg-purple-700 text-white text-[10px] px-4 py-2 rounded-lg font-bold shadow flex items-center gap-1.5 transition">
-                        <NoSymbolIcon class="w-3.5 h-3.5" /> อายัดบัตร
+                <div v-if="card.status === 'active' && !isCardVirtual(card)" class="flex justify-end items-center mt-auto">
+                    <button @click="openSuspendModal(card)" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all duration-200">
+                        <NoSymbolIcon class="w-4 h-4" /> อายัดบัตรชั่วคราว
                     </button>
                 </div>
 
-                <div v-if="card.status === 'inactive' && !isCardVirtual(card)">
+                <div v-if="card.status === 'inactive' && !isCardVirtual(card)" class="mt-auto">
                     
                     <div v-if="showAddressRequestBox(card.cardId)" 
-                         class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm mb-3 relative overflow-hidden">
+                         class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm mb-4 relative overflow-hidden">
                         
                         <div class="absolute left-0 top-0 bottom-0 w-1.5" 
-                             :class="isRequestApproved(card.cardId) ? 'bg-green-500' : 'bg-orange-500'">
+                             :class="isRequestApproved(card.cardId) ? 'bg-green-500' : 'bg-orange-400'">
                         </div>
 
-                        <div class="flex justify-between items-start mb-1.5 pl-3">
-                            <span class="font-bold text-xs" 
-                                  :class="isRequestApproved(card.cardId) ? 'text-green-600' : 'text-orange-500'">
-                                {{ isRequestApproved(card.cardId) ? 'ผู้จัดการสาขาอนุมัติแล้ว' : 'รอผู้จัดการสาขาอนุมัติ' }}
+                        <div class="flex justify-between items-start mb-2 pl-4">
+                            <span class="font-bold text-xs flex items-center gap-1.5" 
+                                  :class="isRequestApproved(card.cardId) ? 'text-green-600' : 'text-orange-600'">
+                                <span class="relative flex h-2 w-2">
+                                  <span v-if="!isRequestApproved(card.cardId)" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2 w-2" :class="isRequestApproved(card.cardId) ? 'bg-green-500' : 'bg-orange-500'"></span>
+                                </span>
+                                {{ isRequestApproved(card.cardId) ? 'ผู้จัดการสาขาอนุมัติแล้ว' : 'รอผู้จัดการสาขาอนุมัติ...' }}
                             </span>
-                            <span class="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">ส่งเรื่องล่าสุด</span>
                         </div>
-                        <div class="text-xs text-gray-700 break-words pl-3">
-                             <span class="font-semibold text-gray-500">ที่อยู่ใหม่:</span> {{ getPendingAddress(card.cardId) }}
+                        <div class="text-xs text-gray-700 break-words pl-4 bg-gray-50 p-2.5 rounded-lg border border-gray-100 mt-2">
+                             <span class="font-bold text-gray-800 block mb-0.5">ที่อยู่จัดส่งใหม่:</span> {{ getPendingAddress(card.cardId) }}
                         </div>
-                        <div class="text-[10px] text-gray-400 mt-2 pl-3 flex items-center gap-1">
-                            <span>ส่งโดย {{ changeRequestMap[card.cardId].requester || 'Call Center' }}</span>
-                            <span>•</span>
-                            <span>เมื่อ: {{ formatDate(changeRequestMap[card.cardId].requestDate) }}</span>
+                        <div class="text-[10px] text-gray-400 mt-2 pl-4 flex items-center gap-1 font-medium">
+                            <span>ส่งโดย: {{ changeRequestMap[card.cardId].requester || 'Call Center' }}</span>
+                            <span class="mx-1">•</span>
+                            <span>{{ formatDate(changeRequestMap[card.cardId].requestDate) }}</span>
                         </div>
                     </div>
 
                     <button v-if="!isShippingOrSuccess(card.cardId)"
                             @click="openAddressModal(card)" 
-                            class="w-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl shadow-sm transition text-xs flex justify-center items-center">
-                        {{ showAddressRequestBox(card.cardId) ? 'แก้ไข/ส่งเรื่องเปลี่ยนที่อยู่ใหม่' : 'แจ้งเปลี่ยนที่อยู่จัดส่งบัตร' }}
+                            class="w-full bg-white border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-700 hover:text-blue-700 font-bold py-3 rounded-xl transition-all duration-200 text-xs flex justify-center items-center gap-2 group">
+                        <TruckIcon class="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
+                        {{ showAddressRequestBox(card.cardId) ? 'แก้ไขข้อมูล / ส่งเรื่องเปลี่ยนที่อยู่อีกครั้ง' : 'แจ้งเปลี่ยนที่อยู่จัดส่งบัตรใหม่' }}
                     </button>
                 </div>
 
-                <div v-if="['locked', 'frozen'].includes(card.status)" class="text-center mt-1">
-                    <span class="text-red-500 font-bold text-xs bg-red-50 px-3 py-2.5 rounded-xl border border-red-100 block w-full">
-                       ⛔ บัตรถูกระงับการใช้งาน
+                <div v-if="['locked', 'frozen'].includes(card.status)" class="text-center mt-auto">
+                    <span class="text-red-600 font-bold text-xs bg-red-50 p-2.5 rounded-xl border border-red-200 flex items-center justify-center gap-2">
+                        <NoSymbolIcon class="w-4 h-4" /> บัตรถูกระงับการใช้งาน
                     </span>
                 </div>
 
               </div>
             </div>
             
-            <div v-if="paginatedCards.length === 0" class="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
-              ไม่พบข้อมูลบัตรในประเภทนี้
-            </div>
+          </div>
+          
+          <div v-if="paginatedCards.length === 0" class="text-center py-16 text-gray-400 bg-white rounded-3xl border-2 border-dashed border-gray-200 mt-6">
+              <span class="text-4xl block mb-3 opacity-50">💳</span>
+              <span class="font-bold text-gray-500">ไม่พบข้อมูลบัตรในประเภทนี้</span>
           </div>
 
-          <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-4 pt-4 border-t border-gray-200">
-             <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center gap-1 text-sm font-bold transition" :class="currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600'"><ArrowLeftIcon class="w-4 h-4" /> Previous</button>
-             <div class="flex gap-2"><button v-for="page in totalPages" :key="page" @click="goToPage(page)" class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition shadow-sm" :class="currentPage === page ? 'bg-blue-600 text-white shadow-blue-200' : 'bg-white text-gray-600 border hover:bg-gray-50'">{{ page }}</button></div>
-             <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center gap-1 text-sm font-bold transition" :class="currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'">Next <ArrowRightIcon class="w-4 h-4" /></button>
+          <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+             <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center gap-1.5 text-sm font-bold transition-all px-3 py-1.5 rounded-lg" :class="currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'"><ArrowLeftIcon class="w-4 h-4" /> Prev</button>
+             <div class="flex gap-1.5">
+                <button v-for="page in totalPages" :key="page" @click="goToPage(page)" class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all shadow-sm" :class="currentPage === page ? 'bg-blue-600 text-white shadow-blue-200 ring-2 ring-blue-600 ring-offset-1' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">{{ page }}</button>
+             </div>
+             <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center gap-1.5 text-sm font-bold transition-all px-3 py-1.5 rounded-lg" :class="currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'">Next <ArrowRightIcon class="w-4 h-4" /></button>
           </div>
         </div>
       </div>
     </div>
 
     <SuspendCardModal :isOpen="isSuspendModalOpen" :isLoading="isSubmitting" @close="closeSuspendModal" @confirm="handleSuspendConfirm" />
-    <AddressChangeModal :isOpen="isAddressModalOpen" :isLoading="isSubmitting" :currentAddress="currentCardAddress" :cardLabel="selectedAddressCard ? `Mastercard • ${formatCardNumber(selectedAddressCard.cardNumber)}` : ''" @close="closeAddressModal" @submit="handleAddressSubmit" />
-
-  </div>
+    
+    <AddressChangeModal :isOpen="isAddressModalOpen" :isLoading="isSubmitting" :currentAddress="currentCardAddress" :cardLabel="selectedAddressCard ? `Mastercard ${formatCardNumber(selectedAddressCard.cardNumber || selectedAddressCard.card_number, false)}` : ''" @close="closeAddressModal" @submit="handleAddressSubmit" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeftIcon, ArrowRightIcon, NoSymbolIcon, TruckIcon } from '@heroicons/vue/24/outline' 
-import { getCustomerById, lockCard, getCardTracking, requestAddressChange, getAddressChangeHistory } from '@/services/callCenterService'
+import { ArrowLeftIcon, ArrowRightIcon, NoSymbolIcon, TruckIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline' 
+// 🌟 นำเข้า getCardSensitive จาก Service
+import { getCustomerById, lockCard, getCardTracking, requestAddressChange, getAddressChangeHistory, getCardSensitive } from '@/services/callCenterService'
 import SuspendCardModal from '@/components/CallCenter/SuspendCardModal.vue'
 import AddressChangeModal from '@/components/CallCenter/AddressChangeModal.vue'
 
 const route = useRoute(); const router = useRouter();
 const customer = ref(null); const activeTab = ref('virtual');
-const currentPage = ref(1); const itemsPerPage = 3;
+const currentPage = ref(1); const itemsPerPage = 2; 
 const trackingMap = ref({}); const changeRequestMap = ref({});
 const isSubmitting = ref(false);
 const alert = reactive({ show: false, type: 'success', message: '' })
+
+// 🌟 State สำหรับเก็บข้อมูลการเปิดดูเลขบัตร
+const revealedCards = ref({})
+const isLoadingSensitive = ref({}) // State สำหรับแสดง Loading ตอนยิง API
+
+// 🌟 ฟังก์ชันดึงเลขเต็ม (ยิง API)
+const toggleCardNumber = async (card) => {
+    const cid = card.cardId
+    
+    // ถ้าบัตรกำลังเปิดอยู่ ให้ปิดกลับไปเหมือนเดิม
+    if (revealedCards.value[cid]) {
+        revealedCards.value[cid] = false
+        return
+    }
+
+    // ถ้ายังไม่เปิด ให้ยิง API ไปขอข้อมูลเต็ม
+    try {
+        isLoadingSensitive.value[cid] = true
+        const res = await getCardSensitive(cid)
+        const sensitiveData = res.data
+
+        // เอาข้อมูลจริงที่ได้มายัดใส่ใน Object ของ Card ใบนั้น
+        card.fullCardNumber = sensitiveData.cardNumber
+        card.fullExpiry = sensitiveData.expiry
+        card.cvv = sensitiveData.cvv
+
+        revealedCards.value[cid] = true // เปิดตาสำเร็จ
+    } catch (error) {
+        console.error("Failed to fetch sensitive data", error)
+        showAlert('error', 'ไม่สามารถดึงข้อมูลบัตรเต็มได้ อาจไม่มีสิทธิ์เข้าถึง')
+    } finally {
+        isLoadingSensitive.value[cid] = false
+    }
+}
 
 // Modal States
 const isSuspendModalOpen = ref(false)
@@ -238,18 +312,18 @@ const getCardStatusBadge = (card) => {
     const status = card.status?.toLowerCase() || ''
     
     if (status === 'active') {
-        return { label: 'เปิดใช้งานบัตรแล้ว', bg: 'bg-green-500/20', text: 'text-green-300', dot: 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]' }
+        return { label: 'เปิดใช้งานบัตรแล้ว', bg: 'bg-green-500/20 border-green-400/30', text: 'text-green-300', dot: 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]' }
     }
     if (status === 'inactive') {
-        return { label: 'ยังไม่เปิดใช้งานบัตร', bg: 'bg-white/20', text: 'text-white', dot: 'bg-gray-300' }
+        return { label: 'ยังไม่เปิดใช้งานบัตร', bg: 'bg-white/20 border-white/30', text: 'text-white', dot: 'bg-gray-200' }
     }
     if (status === 'locked') {
-        return { label: 'Call Center อายัดบัตร', bg: 'bg-red-500/20', text: 'text-red-300', dot: 'bg-red-500' }
+        return { label: 'Call Center อายัดบัตร', bg: 'bg-red-500/20 border-red-400/30', text: 'text-red-300', dot: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' }
     }
     if (status === 'frozen') {
-        return { label: 'Mobile ปิดใช้งาน', bg: 'bg-orange-500/20', text: 'text-orange-300', dot: 'bg-orange-400' }
+        return { label: 'Mobile ปิดใช้งาน', bg: 'bg-orange-500/20 border-orange-400/30', text: 'text-orange-300', dot: 'bg-orange-400 shadow-[0_0_8px_rgba(2fb,146,60,0.8)]' }
     }
-    return { label: status, bg: 'bg-white/20', text: 'text-white', dot: 'bg-gray-300' }
+    return { label: status, bg: 'bg-white/20 border-white/30', text: 'text-white', dot: 'bg-gray-200' }
 }
 
 // --- Delivery Status Logic ---
@@ -288,6 +362,7 @@ const getPendingAddress = (cardId) => { return changeRequestMap.value[cardId]?.n
 // --- Standard Logic ---
 const formatDate = (dateString) => {
   if (!dateString) return ''
+  if (dateString.includes('*')) return '**/**' // รองรับกรณีถูก Mask อยู่
   if (dateString.includes('/')) return dateString;
   const date = new Date(dateString)
   if (isNaN(date.getTime())) return dateString; 
@@ -295,11 +370,30 @@ const formatDate = (dateString) => {
   const year = date.getFullYear().toString().slice(-2)
   return `${month}/${year}`
 }
-const formatCardNumber = (cardNumber) => {
+
+// 🌟 ปรับปรุง Format ฟังก์ชันให้ฉลาดขึ้น
+const formatCardNumber = (cardNumber, isRevealed = false) => {
   if (!cardNumber) return ''
-  const cleanNumber = cardNumber.replace(/\s/g, '')
-  return cleanNumber.replace(/(\d{4})(?=\d)/g, '$1 ')
+  
+  // ถ้ายังถูกปิดตาอยู่ และเลขที่ได้มาจากหลังบ้านมีดอกจันอยู่แล้ว ให้คืนค่านั้นเลย
+  if (!isRevealed && cardNumber.includes('*')) {
+      return cardNumber
+  }
+
+  // ล้างช่องว่างและตัวอักษรพิเศษออกให้หมดเพื่อฟอร์แมตใหม่
+  const cleanNumber = cardNumber.replace(/[\s*]/g, '')
+
+  if (isRevealed) {
+      // โชว์เลขเต็ม เว้นวรรคทุกๆ 4 หลัก
+      return cleanNumber.replace(/(.{4})/g, '$1 ').trim()
+  } else {
+      // ถ้าไม่มีดอกจันมาจากหลังบ้าน (เช่น ส่งมา 16 หลัก) เราต้อง Mask หน้าบ้านเอง
+      if (cleanNumber.length <= 4) return cleanNumber 
+      const last4 = cleanNumber.slice(-4)
+      return `•••• •••• •••• ${last4}`
+  }
 }
+
 const isCardVirtual = (card) => {
     return String(card.isVirtual).toLowerCase() === 'true' || card.isVirtual === true || card.isVirtual === 1;
 }
@@ -389,10 +483,3 @@ const handleAddressSubmit = async (formData) => {
     } catch (error) { showAlert('error', 'ส่งคำร้องไม่สำเร็จ') } finally { isSubmitting.value = false }
 }
 </script>
-
-<style scoped>
-.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.4s ease; }
-.slide-fade-enter-from, .slide-fade-leave-to { transform: translate(-50%, -20px); opacity: 0; }
-.animate-fade-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-</style>

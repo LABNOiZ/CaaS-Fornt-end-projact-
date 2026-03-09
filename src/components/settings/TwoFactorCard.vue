@@ -158,7 +158,7 @@ const handleSubmit = async () => {
 
   } catch (error) {
     console.error(error)
-    if (error.response && error.response.status === 403) {
+    if (error.response && error.response.status === 400) {
         errorMessage.value = 'รหัสผ่านไม่ถูกต้อง'
     } else {
         errorMessage.value = error.message || 'เกิดข้อผิดพลาดในการทำรายการ'

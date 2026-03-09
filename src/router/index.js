@@ -52,8 +52,6 @@ const router = createRouter({
         { path: '', redirect: '/login' }, 
         { path: 'login', name: 'Login', component: LoginView },
         { path: 'login-2fa', name: 'LoginTwoFactor', component: LoginTwoFactor }, 
-        
-        //  2. เพิ่ม Route สำหรับหน้าลืมรหัสผ่าน
         { path: 'forgot-password', name: 'ForgotPassword', component: ForgotPassword },
 
         { path: 'install/create-admin', name: 'CreateAdmin', component: CreateAdmin },
@@ -113,71 +111,76 @@ const router = createRouter({
         { path: 'settings/password', name: 'BranchPassword', component: BranchSettingsPassword },
         { path: 'settings/2fa', name: 'Branch2FA', component: BranchSettingsTwoFactor }, 
       ]
+    },
+
+    // 404 Catch-All Route: ดักจับ URL มั่วๆ แล้วส่งกลับหน้า Login 
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/login'
     }
   ]
 })
 
-//  Router Guard: Logic ที่ครอบคลุม Role 6 และ Reset 2FA
+// Router Guard: Logic ที่ครอบคลุม Role 6 และสถาปัตยกรรม BFF
 router.beforeEach((to, from, next) => {
-  const token = sessionStorage.getItem('token')
+  const isAuthenticated = sessionStorage.getItem('is_logged_in') === 'true'
   const userRoleId = parseInt(sessionStorage.getItem('roleId') || '0') 
   
-  //  เช็คว่าเป็น Installer หรือไม่ (ดูทั้ง flag และ roleId เพื่อความชัวร์)
   const isInstaller = sessionStorage.getItem('is_installer') === 'true' || userRoleId === 6
 
-  // Case 1: ไม่ได้ Login แต่จะเข้าหน้า App
-  if (to.meta.requiresAuth && !token) {
-    next('/login')
-    return
+  // 🌟 Helper ฟังก์ชัน: เตะผู้ใช้กลับไปหน้าหลักตาม Role ของตัวเอง
+  const redirectToHome = () => {
+      if (userRoleId === 2) return '/admin/dashboard'
+      if (userRoleId === 4) return '/callcenter/search-customer'
+      if (userRoleId === 3) return '/branch/dashboard'
+      return '/login'
   }
 
-  // Case 2: Login อยู่แล้ว แต่อยากกลับมาหน้า Login (หรือหน้า Forgot Password)
-  //  เพิ่ม forgot-password เข้าไปในเงื่อนไข เพื่อไม่ให้คน Login แล้วเข้าไปหน้ากู้รหัส
-  if ((to.path === '/login' || to.path === '/forgot-password') && token) {
+  // Case 1: ไม่ได้ Login แต่จะเข้าหน้า App (ที่ต้องการสิทธิ์)
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return next('/login')
+  }
+
+  // Case 2: Login อยู่แล้ว แต่อยากกลับมาหน้า Login หรือ Forgot Password
+  if ((to.path === '/login' || to.path === '/forgot-password') && isAuthenticated) {
       if (isInstaller) {
-        next('/install/create-admin')
+        return next('/install/create-admin')
       } 
-      else if (userRoleId === 2) next('/admin/dashboard')
-      else if (userRoleId === 4) next('/callcenter/search-customer')
-      else if (userRoleId === 3) next('/branch/dashboard')
-      else next()
-      return
+      return next(redirectToHome())
   }
 
-  // Case 3: ป้องกัน Installer (Role 6) แอบหนีไปเข้า Dashboard
-  if (token && isInstaller && (to.path.startsWith('/admin') || to.path.startsWith('/branch') || to.path.startsWith('/callcenter'))) {
-      next('/install/create-admin')
-      return
+  // Case 3: ป้องกัน Installer (Role 6) แอบหนีไปเข้า Dashboard ทั่วไป
+  if (isAuthenticated && isInstaller && (to.path.startsWith('/admin') || to.path.startsWith('/branch') || to.path.startsWith('/callcenter'))) {
+      return next('/install/create-admin')
   }
 
-  // Case 4: ป้องกัน User ทั่วไป แอบเข้าหน้า Install (ยกเว้นกรณี Reset 2FA)
-  if (token && !isInstaller && to.path.startsWith('/install')) {
-
+  // Case 4: ป้องกัน User ทั่วไป แอบเข้าหน้า Install
+  if (isAuthenticated && !isInstaller && to.path.startsWith('/install')) {
       const setupOrigin = sessionStorage.getItem('setupOrigin')
       
-      // อนุญาตถ้า setupOrigin เป็น 'install_flow' หรือ 'settings' (จากการกด Reset 2FA)
+      // อนุญาตถ้า setupOrigin เป็น 'install_flow' หรือ 'settings'
       if (setupOrigin === 'install_flow' || setupOrigin === 'settings') {
-          next()
-          return
+          return next()
       }
 
-      // ถ้าไม่มีสิทธิ์ ให้ดีดกลับหน้าหลักของ Role นั้นๆ
-      if (userRoleId === 2) next('/admin/dashboard')
-      else if (userRoleId === 4) next('/callcenter/search-customer')
-      else if (userRoleId === 3) next('/branch/dashboard')
-      else next('/login')
-      return
+      // ถ้าไม่มีสิทธิ์ ให้ดีดกลับหน้าหลัก
+      return next(redirectToHome())
   }
 
-  // Case 5: Role Guard (ป้องกันข้าม Role เช่น Branch จะเข้าหน้า Admin)
-  if (to.meta.role && to.meta.role !== userRoleId) {
-      if (userRoleId === 2) next('/admin/dashboard')
-      else if (userRoleId === 4) next('/callcenter/search-customer')
-      else if (userRoleId === 3) next('/branch/dashboard')
-      else next('/login')
-      return
+  // 🛡️ Case 5 (อัปเกรดใหม่!): Role Guard ป้องกันข้ามโซนเด็ดขาด (Ironclad Security) 
+  // ดักจับจาก URL Path โดยตรง ปลอดภัยที่สุด 100% ต่อให้มี Sub-routes ลึกแค่ไหนก็ไม่หลุด!
+  if (isAuthenticated && !isInstaller) {
+      if (to.path.startsWith('/admin') && userRoleId !== 2) {
+          return next(redirectToHome()) // ถ้าเข้า /admin แต่ไม่ใช่ Role 2 เตะกลับทันที
+      }
+      if (to.path.startsWith('/branch') && userRoleId !== 3) {
+          return next(redirectToHome()) // ถ้าเข้า /branch แต่ไม่ใช่ Role 3 เตะกลับทันที
+      }
+      if (to.path.startsWith('/callcenter') && userRoleId !== 4) {
+          return next(redirectToHome()) // ถ้าเข้า /callcenter แต่ไม่ใช่ Role 4 เตะกลับทันที
+      }
   }
-
+  
   next()
 })
 

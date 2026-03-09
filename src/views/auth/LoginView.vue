@@ -119,7 +119,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/authService'
-import { userService } from '@/services/userService' 
 import bgLogin from '@/assets/bg-login_1.png'
 import { 
   InformationCircleIcon, 
@@ -128,6 +127,7 @@ import {
   EyeSlashIcon 
 } from '@heroicons/vue/24/solid'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { jwtDecode } from 'jwt-decode'
 
 const router = useRouter()
 const email = ref('')
@@ -166,23 +166,51 @@ const handleLogin = async () => {
         return 
     }
 
-    // 3. เช็ค Token (กรณี Login สำเร็จ)
-    if (data.token || data.accessToken) {
-        const token = data.token || data.accessToken
-        sessionStorage.setItem('token', token)
+    // 3. เช็คสถานะความสำเร็จ
+    if (data.message === 'Login Success' || response.status === 200) {
         
-        // 🔹 เก็บ Refresh Token (ถ้ามี) สำหรับ Silent Refresh
-        if (data.refreshToken) {
-            sessionStorage.setItem('refreshToken', data.refreshToken)
+        // 🌟 แจกบัตรผ่านทางให้ Vue Router (เปลี่ยนชื่อเป็น is_logged_in)
+        sessionStorage.setItem('is_logged_in', 'true');
+        
+        let userRole = null;
+
+        // ถอดรหัสหา Role จาก idToken
+        if (data.idToken || response.data?.user?.idToken) {
+            const tokenToDecode = data.idToken || response.data.user.idToken;
+            
+            // ❌ ลบการเซฟ idToken ลง sessionStorage ออกแล้ว ปลอดภัยจาก XSS
+            const decodedProfile = jwtDecode(tokenToDecode);
+            console.log("ถอดรหัส idToken สำเร็จ (ใน RAM):", decodedProfile);
+
+            // ================================================================
+            // 🛡️ ระบบตรวจสอบ Nonce (ป้องกัน Replay Attack)
+            // ================================================================
+            const storedNonce = sessionStorage.getItem('authNonce');
+            if (storedNonce && decodedProfile.nonce) {
+                if (decodedProfile.nonce !== storedNonce) {
+                    console.error("🚨 Security Breach: Nonce Mismatch!");
+                    sessionStorage.clear();
+                    throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch) กรุณาเข้าสู่ระบบใหม่");
+                }
+                console.log("✅ ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
+                sessionStorage.removeItem('authNonce');
+                sessionStorage.removeItem('authState');
+            } else if (storedNonce && !decodedProfile.nonce) {
+                console.warn("⚠️ แจ้งเตือน: หลังบ้านยังไม่ได้ฝัง Nonce กลับมาใน Token");
+            }
+            // ================================================================
+
+            userRole = decodedProfile.roleId || decodedProfile.role;
+        } 
+        // กรณีหลังบ้านส่ง Role มาให้ตรงๆ ในก้อน user
+        else if (data.roleId || data.role || data.user?.roleId) {
+            userRole = data.roleId || data.role || data.user?.roleId;
         }
         
-        // หา Role ID
-        let userRole = data.roleId || data.role
+        userRole = Number(userRole)
 
         if (!userRole) {
-            console.log("Fetching User Profile...")
-            const profileRes = await userService.getProfile()
-            userRole = Number(profileRes.data.roleId)
+            throw new Error("Critical: Unable to determine user role from Server response.")
         }
         
         console.log("User Role:", userRole)
@@ -199,24 +227,37 @@ const handleLogin = async () => {
     console.error("Login Error:", error)
     isError.value = true
     
-    //  อัปเดตการดักจับ Error ให้ครอบคลุมทุกเคสและเป็นภาษาไทย
     if (error.response) {
-        // มีการตอบกลับมาจาก Server แต่เป็น Error (เช่น 400, 401, 500)
         const status = error.response.status
-        const serverMsg = error.response.data?.error || error.response.data?.message
+        const serverMsg = error.response.data?.error || error.response.data?.message || ''
         
-        if (status === 401 || status === 400) {
+        //  1. ดักจับกรณี "บัญชีถูกระงับ" (เช็คจาก Status Code 403 หรือ ข้อความจากหลังบ้าน)
+        const isSuspended = 
+            status === 403 || 
+            serverMsg.toLowerCase().includes('suspend') || 
+            serverMsg.toLowerCase().includes('lock') || 
+            serverMsg.toLowerCase().includes('inactive') || 
+            serverMsg.includes('ระงับ');
+
+        if (isSuspended) {
+            errorMessage.value = 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
+        } 
+        // 2. ดักจับกรณี รหัสผิด / อีเมลไม่เจอ
+        else if (status === 400 || status === 401) {
+            // ถ้าพี่แนท (Backend) ส่งข้อความมาชัดเจน ให้ใช้ข้อความพี่แนท ถ้าไม่ส่งมาให้ใช้ค่า Default
             errorMessage.value = serverMsg || 'Email หรือ Password ไม่ถูกต้อง'
-        } else if (status === 500) {
-            errorMessage.value = 'ระบบขัดข้องชั่วคราว ไม่สามารถเชื่อมต่อ Server ได้ '
-        } else {
-            errorMessage.value = serverMsg || `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (Code: ${status})`
+        } 
+        // 3. เซิร์ฟเวอร์ล่ม
+        else if (status === 500) {
+            errorMessage.value = 'ระบบขัดข้องชั่วคราว ไม่สามารถเชื่อมต่อ Server ได้'
+        } 
+        // 4. Error อื่นๆ
+        else {
+            errorMessage.value = serverMsg || `เกิดข้อผิดพลาด (${status})`
         }
     } else if (error.request) {
-        // ส่ง Request ไปแล้ว แต่ไม่ได้ Response กลับมา (Server ปิด, เน็ตพัง)
         errorMessage.value = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต'
     } else {
-        // Error อื่นๆ
         errorMessage.value = 'เกิดข้อผิดพลาด: ' + error.message
     }
   } finally {
@@ -225,14 +266,12 @@ const handleLogin = async () => {
 }
 
 const handleRedirect = (roleId) => {
-    // Case 1: Role 6 = Default (Installer)
     if (roleId === 6) {
         sessionStorage.setItem('is_installer', 'true')
         router.push('/install/create-admin')
         return
     } 
     
-    // User ทั่วไป (Admin, Branch, CallCenter)
     sessionStorage.removeItem('is_installer')
 
     if (roleId === 2) {

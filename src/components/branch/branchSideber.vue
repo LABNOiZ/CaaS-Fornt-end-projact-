@@ -49,6 +49,8 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { HomeIcon, ClipboardDocumentCheckIcon, CogIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
+// 🌟 นำเข้า authService 
+import { authService } from '@/services/authService'
 
 const router = useRouter()
 
@@ -57,9 +59,15 @@ const primaryMenus = [
   { to: '/branch/approval', label: 'อนุมัติคำร้องขอ', icon: ClipboardDocumentCheckIcon },
 ]
 
-const handleLogout = () => {
-  sessionStorage.removeItem('token')
-  sessionStorage.removeItem('roleId')
-  router.push('/login')
+// 🌟 ปรับปรุงฟังก์ชัน Logout ให้ยิง API เหมือน Navbar
+const handleLogout = async () => {
+  try {
+    await authService.logout()
+  } catch (error) {
+    console.warn("Logout API Error:", error)
+  } finally {
+    sessionStorage.clear() // ล้างทิ้งให้หมดสะอาดชัวร์กว่า
+    router.push('/login')
+  }
 }
 </script>

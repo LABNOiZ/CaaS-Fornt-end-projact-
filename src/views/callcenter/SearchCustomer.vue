@@ -103,10 +103,42 @@
                 <tbody class="divide-y divide-gray-50">
                     
                     <tr v-for="customer in paginatedResults" :key="customer.userId" class="hover:bg-indigo-50/40 transition group">
-                        <td class="px-4 py-3 text-xs font-bold text-gray-800">{{ customer.fullNameTh }}</td>
-                        <td class="px-4 py-3 text-xs text-gray-600">{{ customer.email }}</td>
-                        <td class="px-4 py-3 text-xs text-gray-500 font-mono">{{ customer.mobileNumber }}</td>
-                        <td class="px-4 py-3 text-xs text-gray-500 font-mono">{{ customer.citizenId }}</td>
+                        <td class="px-4 py-3 text-xs font-bold text-gray-800 select-text">
+                            <div class="flex items-center gap-2">
+                                <span>{{ customer.fullNameTh }}</span>
+                                <button @click="copyToClipboard(customer.fullNameTh)" class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-100 rounded transition opacity-0 group-hover:opacity-100 relative" title="คัดลอก">
+                                    <DocumentDuplicateIcon class="w-3.5 h-3.5" />
+                                    <span v-if="copiedText === customer.fullNameTh" class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">คัดลอกแล้ว!</span>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-600 select-text">
+                            <div class="flex items-center gap-2">
+                                <span>{{ customer.email }}</span>
+                                <button v-if="customer.email" @click="copyToClipboard(customer.email)" class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-100 rounded transition opacity-0 group-hover:opacity-100 relative" title="คัดลอก">
+                                    <DocumentDuplicateIcon class="w-3.5 h-3.5" />
+                                    <span v-if="copiedText === customer.email" class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">คัดลอกแล้ว!</span>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-500 font-mono select-text">
+                            <div class="flex items-center gap-2">
+                                <span>{{ customer.mobileNumber }}</span>
+                                <button @click="copyToClipboard(customer.mobileNumber)" class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-100 rounded transition opacity-0 group-hover:opacity-100 relative" title="คัดลอก">
+                                    <DocumentDuplicateIcon class="w-3.5 h-3.5" />
+                                    <span v-if="copiedText === customer.mobileNumber" class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">คัดลอกแล้ว!</span>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-500 font-mono select-text">
+                            <div class="flex items-center gap-2">
+                                <span>{{ customer.citizenId }}</span>
+                                <button @click="copyToClipboard(customer.citizenId)" class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-100 rounded transition opacity-0 group-hover:opacity-100 relative" title="คัดลอก">
+                                    <DocumentDuplicateIcon class="w-3.5 h-3.5" />
+                                    <span v-if="copiedText === customer.citizenId" class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">คัดลอกแล้ว!</span>
+                                </button>
+                            </div>
+                        </td>
                         <td class="px-4 py-3 text-center">
                             <router-link 
                                 :to="{ name: 'CustomerDetail', params: { id: customer.userId } }" 
@@ -176,13 +208,16 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { MagnifyingGlassIcon, ChevronRightIcon, ArrowPathIcon, ExclamationCircleIcon, UsersIcon, ChevronLeftIcon } from '@heroicons/vue/24/outline'
+// 🎯 Import DocumentDuplicateIcon เข้ามาใช้งาน
+import { MagnifyingGlassIcon, ChevronRightIcon, ArrowPathIcon, ExclamationCircleIcon, UsersIcon, ChevronLeftIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 import { searchCustomer } from '@/services/callCenterService' 
 
 // State
 const isLoading = ref(false)
 const hasSearched = ref(false)
 const isError = ref(false)
+// 🎯 State สำหรับเก็บข้อมูลที่กำลังถูกคัดลอก เพื่อใช้แสดง Tooltip "คัดลอกแล้ว!"
+const copiedText = ref('')
 
 const searchForm = reactive({
     name: '',
@@ -191,7 +226,7 @@ const searchForm = reactive({
 
 const searchResults = ref([])
 
-//  Pagination State
+// Pagination State
 const currentPage = ref(1)
 const itemsPerPage = 5 
 
@@ -210,7 +245,25 @@ onMounted(() => {
     }
 })
 
-//  Computed
+// 🎯 ฟังก์ชันสำหรับคัดลอกข้อความ
+const copyToClipboard = async (text) => {
+    if (!text) return
+    try {
+        await navigator.clipboard.writeText(text)
+        copiedText.value = text // เซ็ตข้อความให้ตรงกับ Tooltip ที่จะแสดง
+        
+        // ให้ Tooltip คัดลอกแล้ว! หายไปหลังจากผ่านไป 2 วินาที
+        setTimeout(() => {
+            if (copiedText.value === text) {
+                copiedText.value = ''
+            }
+        }, 2000)
+    } catch (err) {
+        console.error('ไม่สามารถคัดลอกได้:', err)
+    }
+}
+
+// Computed
 const paginatedResults = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage
     const end = start + itemsPerPage
@@ -234,7 +287,6 @@ const handleNameInput = (e) => {
     if(val.startsWith(' ')) val = val.trimStart()
     val = val.replace(/\s{2,}/g, ' ')
     searchForm.name = val
-    //  แก้ไข: ไม่ล้างค่า idCard แล้ว เพื่อให้กรอกคู่กันได้
     isError.value = false
 }
 
@@ -249,12 +301,10 @@ const handleIdCardInput = (e) => {
     if (val.length > 12) formatted += '-' + val.slice(12, 13)
     
     searchForm.idCard = formatted
-    //  แก้ไข: ไม่ล้างค่า name แล้ว
     isError.value = false
 }
 
 const handleSearch = async () => {
-    // เช็คว่าต้องมีอย่างน้อย 1 ช่องที่ไม่ว่าง
     if (!searchForm.name.trim() && !searchForm.idCard.trim()) {
         isError.value = true
         return
@@ -267,7 +317,6 @@ const handleSearch = async () => {
     currentPage.value = 1 
 
     try {
-        //  แก้ไข: สร้าง Payload ที่ส่งไปทั้งคู่ (ถ้ามีค่า)
         const payload = {
             queryCitizenId: searchForm.idCard ? searchForm.idCard.trim().replace(/-/g, '') : '',
             queryFullNameTh: searchForm.name ? searchForm.name.trim() : ''

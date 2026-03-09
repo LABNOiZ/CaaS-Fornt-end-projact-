@@ -1,6 +1,5 @@
 <template>
   <nav class="w-full h-16 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-6 transition-all duration-300 relative z-50">
-    
     <div class="flex-1">
       <a :class="['text-xl font-extrabold tracking-tight cursor-pointer hover:opacity-80 transition', themeColors.text]">
         {{ title }}
@@ -8,7 +7,6 @@
     </div>
 
     <div class="flex-none gap-4 flex items-center">
-      
       <div class="hidden md:flex flex-col items-end mr-1">
         <p class="text-sm font-bold text-gray-800 leading-tight">{{ fullName }}</p>
         <p class="text-[11px] text-gray-400 font-medium">{{ email }}</p> 
@@ -48,8 +46,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUserProfile } from '@/services/adminService'
 import { UserIcon, UserCircleIcon, KeyIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/solid' 
+import { userService } from '@/services/userService'
 
 const props = defineProps({
   title: {
@@ -60,22 +58,16 @@ const props = defineProps({
 
 const router = useRouter()
 const fullName = ref('Loading...')
-const email = ref('')
+const email = ref('...')
 const roleId = ref(null)
 
-//  Logic เลือกสีตาม Role
 const themeColors = computed(() => {
   const rId = Number(roleId.value)
-  if (rId === 4) { // Call Center
-    return { text: 'text-pink-600', icon: 'text-pink-500', bgLight: 'bg-pink-50' }
-  } else if (rId === 3) { // Branch Manager
-    return { text: 'text-purple-600', icon: 'text-purple-500', bgLight: 'bg-purple-50' }
-  } else { // Admin
-    return { text: 'text-blue-600', icon: 'text-blue-500', bgLight: 'bg-blue-50' }
-  }
+  if (rId === 4) return { text: 'text-pink-600', icon: 'text-pink-500', bgLight: 'bg-pink-50' }
+  else if (rId === 3) return { text: 'text-purple-600', icon: 'text-purple-500', bgLight: 'bg-purple-50' }
+  else return { text: 'text-blue-600', icon: 'text-blue-500', bgLight: 'bg-blue-50' }
 })
 
-// Path หลักตาม Role
 const basePath = computed(() => {
   const rId = Number(roleId.value)
   switch (rId) {
@@ -95,34 +87,33 @@ onMounted(async () => {
   roleId.value = sessionStorage.getItem('roleId')
 
   try {
-    const response = await getUserProfile()
-    const user = response.data
+    const res = await userService.getProfile()
+    const userData = res.data || {}
 
-    //  แก้ไข: ลำดับการเช็คชื่อ (Check ไทยก่อน -> อังกฤษ -> Email)
-    if (user.fullNameTh) {
-        fullName.value = user.fullNameTh
-    } else if (user.firstNameTh && user.lastNameTh) {
-        fullName.value = `${user.firstNameTh} ${user.lastNameTh}`
-    } else if (user.displayFullNameTh) { // เผื่อ API ส่ง key นี้มา
-        fullName.value = user.displayFullNameTh
-    } else if (user.fullNameEng) {
-        fullName.value = user.fullNameEng
-    } else if (user.firstName && user.lastName) {
-        fullName.value = `${user.firstName} ${user.lastName}`
-    } else {
-        fullName.value = user.email || "Unknown User"
+    // 1. ดักจับชื่อให้ครอบคลุมทุก Format ที่หลังบ้านอาจจะส่งมา
+    let displayFullName = userData.fullNameTh 
+
+    // 2. ถ้าไม่มีชื่อเต็ม ลองประกอบจากชื่อและนามสกุล (ถ้ามี)
+    /*if (!displayFullName && (userData.firstName || userData.firstNameTh)) {
+        const first = userData.firstNameTh || userData.firstName || ''
+        const last = userData.lastNameTh || userData.lastName || ''
+        displayFullName = `${first} ${last}`.trim()
     }
 
-    email.value = user.email || '-'
+    // 3.  ไม้ตายสุดท้าย: ถ้าหลังบ้านยังไม่ส่งชื่ออะไรมาเลย ให้เอา Email มาตัด @ ออกให้ดูสวยงามแทน
+    if (!displayFullName && userData.email) {
+        displayFullName = userData.email.split('@')[0]
+    }*/
 
-    if (user.roleId) {
-        roleId.value = user.roleId
-        sessionStorage.setItem('roleId', user.roleId)
-    }
+    fullName.value = displayFullName || 'System User'
+    email.value = userData.email || sessionStorage.getItem('email') || '-'
 
   } catch (error) {
-    console.error("Failed to fetch user profile:", error)
-    fullName.value = "Guest"
+    console.warn("Failed to fetch profile from API:", error)
+    // ดึงจาก Session มาโชว์แก้ขัดไปก่อนถ้า API มีปัญหา
+    const savedEmail = sessionStorage.getItem('email') || ""
+    fullName.value = savedEmail.split('@')[0] || "Guest"
+    email.value = savedEmail
   }
 })
 

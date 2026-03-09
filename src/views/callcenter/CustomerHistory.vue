@@ -1,6 +1,4 @@
 <template>
-  <div class="h-[calc(100vh-8.5rem)] flex flex-col overflow-hidden bg-gray-50 px-6 pt-6 pb-2 font-sans">
-
     <div class="flex-none mb-4 flex items-center gap-3">
         <div class="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
             <ClipboardDocumentListIcon class="w-6 h-6 text-white" />
@@ -14,18 +12,34 @@
     <div class="flex-none bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
         <div class="flex flex-col xl:flex-row gap-4 items-end">
             
-            <div class="flex-none w-full max-w-[320px]"> 
-                <label class="block text-gray-500 text-[10px] font-bold mb-1 uppercase tracking-wider">ค้นหาลูกค้า</label>
+            <div class="flex-none w-full max-w-[320px] relative"> 
+                <label class="block text-gray-500 text-[10px] font-bold mb-1 uppercase tracking-wider" :class="{'text-red-500': hasSearchError}">ค้นหาลูกค้า</label>
                 <div class="relative group">
-                    <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-blue-500 transition-colors" />
+                    <MagnifyingGlassIcon class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 transition-colors" 
+                        :class="hasSearchError ? 'text-red-400 group-focus-within:text-red-500' : 'text-gray-400 group-focus-within:text-blue-500'" 
+                    />
                     <input 
                         v-model="searchQuery" 
                         @keyup.enter="handleSearch"
+                        @input="hasSearchError = false" 
                         type="text" 
                         placeholder="ระบุชื่อ-นามสกุล..."
-                        class="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all h-[40px]"
+                        class="w-full pl-10 pr-4 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all h-[40px]"
+                        :class="hasSearchError ? 'bg-red-50/50 border-red-400 focus:ring-red-500/20 focus:border-red-500 text-red-600 placeholder-red-300' : 'bg-gray-50 border-gray-200 focus:ring-blue-500/20 focus:border-blue-500 text-gray-800'"
                     />
                 </div>
+                <transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="transform -translate-y-1 opacity-0"
+                    enter-to-class="transform translate-y-0 opacity-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="transform translate-y-0 opacity-100"
+                    leave-to-class="transform -translate-y-1 opacity-0"
+                >
+                    <p v-if="hasSearchError" class="absolute -bottom-5 left-1 text-[10px] text-red-500 font-bold flex items-center gap-1">
+                        <ExclamationCircleIcon class="w-3 h-3" /> กรุณาระบุชื่อลูกค้าก่อนค้นหา
+                    </p>
+                </transition>
             </div>
 
             <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
@@ -157,8 +171,6 @@
         </div>
 
     </div>
-
-  </div>
 </template>
 
 <script setup>
@@ -169,15 +181,17 @@ import {
   ClipboardDocumentListIcon, 
   ChevronLeftIcon,
   ChevronRightIcon,
-  DocumentMagnifyingGlassIcon
+  DocumentMagnifyingGlassIcon,
+  ExclamationCircleIcon // 🌟 นำเข้า Icon สำหรับ Error
 } from '@heroicons/vue/24/outline' 
 
 const logs = ref([])
 const isLoading = ref(false)
 const searchQuery = ref('')
+const hasSearchError = ref(false) // 🌟 เพิ่มตัวแปรเช็ค Error ช่อง Input
 
 const currentPage = ref(1)
-const itemsPerPage = 5 // ปรับจำนวนรายการต่อหน้าให้พอดีจอ
+const itemsPerPage = 5
 
 const today = new Date().toISOString().split('T')[0]
 const startDate = ref(today)
@@ -185,7 +199,6 @@ const endDate = ref(today)
 const startTime = ref('00:00')
 const endTime = ref('23:59')
 
-// Logic: เรียงลำดับ + แบ่งหน้า
 const sortedLogs = computed(() => {
     if (!logs.value || logs.value.length === 0) return []
     return [...logs.value].sort((a, b) => {
@@ -235,11 +248,13 @@ const getActionClass = (activity) => {
 }
 
 const handleSearch = async () => {
+    // 🌟 เปลี่ยนจากการใช้ alert เป็นการแสดง UI Error แทน
     if(!searchQuery.value) {
-        alert('กรุณาระบุชื่อลูกค้า')
+        hasSearchError.value = true
         return
     }
 
+    hasSearchError.value = false // ล้าง Error ถ้ามีข้อมูล
     isLoading.value = true
     logs.value = [] 
     currentPage.value = 1 
@@ -271,13 +286,13 @@ const handleSearch = async () => {
              if (error.response.status === 404) {
                  logs.value = [] 
              } else if (error.response.status === 403) {
-                 alert("⛔ คุณไม่มีสิทธิ์เข้าถึงประวัติลูกค้าส่วนนี้ (403 Forbidden)")
+                 alert(" คุณไม่มีสิทธิ์เข้าถึงประวัติลูกค้าส่วนนี้ (403 Forbidden)")
              } else {
                  const msg = error.response.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ"
-                 alert(`❌ เกิดข้อผิดพลาด: ${msg}`) 
+                 alert(` เกิดข้อผิดพลาด: ${msg}`) 
              }
         } else {
-             alert("❌ ไม่สามารถเชื่อมต่อ Server ได้")
+             alert(" ไม่สามารถเชื่อมต่อ Server ได้")
         }
     } finally {
         isLoading.value = false

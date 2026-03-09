@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>novapay-frontend</title>
+
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self'; 
+      script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
+      font-src 'self' data: https://fonts.gstatic.com; 
+      connect-src 'self' ws://localhost:5173 wss://localhost:5173 https://10.82.241.151:8443 https://localhost:3000; 
+      img-src 'self' data: https: http://10.82.241.104:9000;
+    ">
   </head>
   <body>
     <div id="app"></div>

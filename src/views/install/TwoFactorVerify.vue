@@ -101,7 +101,7 @@
 import { ref, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authService } from '@/services/authService'
-import { getUserProfile } from '@/services/adminService'
+import { jwtDecode } from 'jwt-decode'
 import bgLogin from '@/assets/bg-login_1.png'
 import { 
     ShieldCheckIcon, 
@@ -114,28 +114,21 @@ import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 const router = useRouter()
 const route = useRoute()
 
-//  State ใหม่สำหรับ OTP แยกช่อง
 const otpDigits = ref(['', '', '', '', '', '']) 
 const otpInputs = ref([]) 
-
 const isError = ref(false)
 const errorMessage = ref('')
 const isLoading = ref(false)
 
 const email = route.query.email || sessionStorage.getItem('install_email') || sessionStorage.getItem('auth_email')
 
-// --- Logic จัดการ Input 6 ช่อง ---
 const handleOtpInput = (index, event) => {
     isError.value = false
     const val = event.target.value
-    // ถ้าเป็นตัวเลข ให้ขยับไปช่องถัดไป
-    if (val && index < 5) {
-        otpInputs.value[index + 1].focus()
-    }
+    if (val && index < 5) otpInputs.value[index + 1].focus()
 }
 
 const handleOtpDelete = (index, event) => {
-    // ถ้ากด Backspace และช่องนี้ว่าง ให้ถอยกลับไปลบช่องก่อนหน้า
     if (!otpDigits.value[index] && index > 0) {
         otpDigits.value[index - 1] = ''
         otpInputs.value[index - 1].focus()
@@ -156,9 +149,7 @@ const handleSubmit = async () => {
   isError.value = false
   errorMessage.value = ''
 
-  // รวม Array เป็น String เดียว
   const otpCode = otpDigits.value.join('')
-
   if (otpCode.length < 6) return
   if (!email) {
       errorMessage.value = "ไม่พบข้อมูล Email (กรุณาเริ่มใหม่)"
@@ -168,62 +159,79 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    console.log(`Verifying OTP for ${email}...`)
+    console.log(`Verifying OTP Setup for ${email}...`)
     const response = await authService.verify2FA(email, otpCode)
+    const data = response.data
     
-    const token = response?.data?.accessToken || response?.data?.token || response?.data?.data?.accessToken
+    // 🌟 เช็คแค่ว่าสำเร็จไหม (Token ถูกแนบเป็น Cookie ไปแล้ว)
+    if (data.message === 'Verify Success' || response.status === 200) {
+        
+        // 🌟 สร้างบัตรผ่านด่านหลอกให้ Vue Router
+        sessionStorage.setItem('token', 'BFF_SESSION_ACTIVE')
 
-    if (token) {
-        sessionStorage.setItem('token', token)
-        console.log("Token saved to SessionStorage!")
+        let userRoleId = data.roleId || data.role || data.user?.roleId 
 
-        let userRoleId = response.data.roleId 
-
-        if (!userRoleId) {
+        if (!userRoleId && data.idToken) {
             try {
-                const profileRes = await getUserProfile()
-                userRoleId = profileRes.data.roleId || profileRes.data.role 
+                const decodedToken = jwtDecode(data.idToken)
+                
+                // 🛡️ เช็ค Nonce 
+                const storedNonce = sessionStorage.getItem('authNonce');
+                if (storedNonce && decodedToken.nonce) {
+                    if (decodedToken.nonce !== storedNonce) {
+                        console.error("🚨 Security Breach: Nonce Mismatch!");
+                        sessionStorage.clear();
+                        throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch)");
+                    }
+                    console.log("✅ ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
+                    sessionStorage.removeItem('authNonce');
+                    sessionStorage.removeItem('authState');
+                }
+
+                userRoleId = decodedToken.roleId || decodedToken.role 
             } catch (err) {
-                console.error("Failed to fetch profile:", err)
+                console.error("Failed to decode token:", err)
             }
         }
 
         if (userRoleId) {
-            sessionStorage.setItem('roleId', userRoleId)
+            sessionStorage.setItem('roleId', Number(userRoleId))
         }
         
         const origin = sessionStorage.getItem('setupOrigin')
         
         if (origin === 'settings') {
-            console.log("Redirecting back to Settings...")
             sessionStorage.removeItem('setupOrigin')
-            if (userRoleId === 4) router.push({ name: 'CallCenter2FA' })
+            if (Number(userRoleId) === 4) router.push({ name: 'CallCenter2FA' })
             else router.push({ name: 'SettingsTwoFactor' }) 
         } else {
             router.push('/install/two-factor-complete') 
         }
 
     } else {
-        throw new Error("ยืนยันตัวตนผ่าน แต่ไม่ได้รับ Token จาก Server")
+        throw new Error("Invalid response from server")
     }
 
   } catch (error) {
-    console.error("2FA Failed:", error)
+    console.error("2FA Setup Failed:", error)
     isError.value = true
-    // Clear OTP เมื่อผิดพลาด
     otpDigits.value = ['', '', '', '', '', '']
     nextTick(() => otpInputs.value[0]?.focus())
     
     if (error.response) {
-        if (error.response.status === 400) {
-            errorMessage.value = "รหัส OTP ไม่ถูกต้อง"
-        } else if (error.response.data && error.response.data.message) {
-            errorMessage.value = error.response.data.message
+        const status = error.response.status
+        const serverMsg = error.response.data?.message || error.response.data?.error
+        if (status === 400 || status === 401) {
+            errorMessage.value = serverMsg || "รหัส OTP ไม่ถูกต้อง"
+        } else if (status === 500) {
+            errorMessage.value = "ระบบขัดข้อง (500) ไม่สามารถเชื่อมต่อหลังบ้านได้"
         } else {
-            errorMessage.value = `เกิดข้อผิดพลาด (${error.response.status})`
+            errorMessage.value = serverMsg || `เกิดข้อผิดพลาด (${status})`
         }
-    } else {
+    } else if (error.request) {
         errorMessage.value = 'ไม่สามารถเชื่อมต่อ Server ได้'
+    } else {
+        errorMessage.value = error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
     }
   } finally {
     isLoading.value = false

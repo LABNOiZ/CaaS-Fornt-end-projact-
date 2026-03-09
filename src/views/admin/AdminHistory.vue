@@ -1,6 +1,4 @@
 <template>
-  <div class="h-full flex flex-col overflow-hidden bg-gray-50 px-6 pt-6 pb-2 font-sans">
-
     <div class="flex-none mb-3 flex items-center gap-3">
         <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
             <ClipboardDocumentListIcon class="w-5 h-5 text-white" />
@@ -166,7 +164,6 @@
         </div>
 
     </div>
-  </div>
 </template>
 
 <script setup>

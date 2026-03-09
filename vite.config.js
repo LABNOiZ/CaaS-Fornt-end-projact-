@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      // ✅ 1. กลับมาเปิดใช้ HTTPS หน้าบ้านด้วยไฟล์ที่สร้างจาก mkcert
+      
       https: {
         key: fs.readFileSync(path.resolve(__dirname, './localhost+3-key.pem')),
         cert: fs.readFileSync(path.resolve(__dirname, './localhost+3.pem')),
@@ -32,12 +32,11 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_TARGET_URL, 
           changeOrigin: true,
-          // ✅ 2. ปิดการตรวจสอบเพื่อไม่ให้ติด Error 500 หรือ self-signed
+          
           secure: true, 
            
           agent: new https.Agent({
-            ca: fs.readFileSync(path.resolve(__dirname, 'certs/kong_cert.crt'))
-            //rejectUnauthorized: false 
+            ca: fs.readFileSync(path.resolve(__dirname, 'certs/kong_cert.crt')) 
           })
         }
       }

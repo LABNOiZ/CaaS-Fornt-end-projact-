@@ -1,15 +1,11 @@
 <template>
   <div class="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900 font-sans p-4">
     
-    <div 
-      class="absolute inset-0 z-0"
-      :style="{ 
-        backgroundImage: `url(${bgLogin})`, 
-        backgroundSize: 'cover', 
-        backgroundPosition: 'center' 
-      }">
-    </div>
-    <div class="absolute inset-0 z-0 bg-gradient-to-br from-blue-900/80 via-indigo-900/80 to-purple-900/80"></div>
+    <div class="absolute inset-0 z-0" :style="{ backgroundImage: `url(${bgLogin})`, backgroundSize: 'cover', backgroundPosition: 'center' }"></div>
+    <div class="absolute inset-0 z-0 bg-gradient-to-br from-blue-900/90 via-indigo-900/90 to-purple-900/90"></div>
+
+    <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] animate-pulse"></div>
+    <div class="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] animate-pulse delay-1000"></div>
 
     <div class="relative z-10 w-full max-w-lg p-6">
       <div class="absolute inset-0 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl"></div>
@@ -102,8 +98,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { authService } from '@/services/authService' 
-import { userService } from '@/services/userService' 
+import { authService } from '@/services/authService'  
 import bgLogin from '@/assets/bg-login_1.png'
 import { 
     ShieldCheckIcon, 
@@ -112,13 +107,12 @@ import {
     ArrowLeftIcon 
 } from '@heroicons/vue/24/solid'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { jwtDecode } from 'jwt-decode'
 
 const router = useRouter()
 
-//  State สำหรับ OTP แยกช่อง
 const otpDigits = ref(['', '', '', '', '', '']) 
 const otpInputs = ref([]) 
-
 const isError = ref(false)
 const errorMessage = ref('')
 const isLoading = ref(false)
@@ -127,23 +121,18 @@ const email = ref('')
 onMounted(() => {
   const storedEmail = sessionStorage.getItem('auth_email')
   if (!storedEmail) {
-    console.warn("Security Alert: Attempted to access 2FA page without email.")
     router.replace('/login') 
     return
   }
   email.value = storedEmail
-  // Focus ช่องแรก
   nextTick(() => otpInputs.value[0]?.focus())
 })
 
-// --- Logic จัดการ Input ---
 const handleOtpInput = (index, event) => {
     isError.value = false
     errorMessage.value = ''
     const val = event.target.value
-    if (val && index < 5) {
-        otpInputs.value[index + 1].focus()
-    }
+    if (val && index < 5) otpInputs.value[index + 1].focus()
 }
 
 const handleOtpDelete = (index, event) => {
@@ -169,9 +158,7 @@ const handleVerify = async () => {
       return
   }
   
-  // รวมค่า OTP
   const otpCode = otpDigits.value.join('')
-
   if (otpCode.length !== 6) {
       isError.value = true
       errorMessage.value = 'กรุณากรอกรหัส 6 หลัก'
@@ -183,76 +170,89 @@ const handleVerify = async () => {
 
   try {
     console.log(`Verifying 2FA for user...`) 
-    
-    // 1. Verify OTP
     const response = await authService.verifyLogin2FA(email.value, otpCode)
     const data = response.data
     
-    const token = data.token || data.accessToken
-    if (!token) {
-        throw new Error('Authentication Failed: No token received')
-    }
-
-    sessionStorage.clear() 
-    sessionStorage.setItem('token', token)
-    
-    //  เก็บ Refresh Token (เพิ่มตามที่คุณเคยขอก่อนหน้านี้)
-    if (data.refreshToken) {
-        sessionStorage.setItem('refreshToken', data.refreshToken)
-    }
-    
-    try {
-        let userRole = data.roleId || data.role
-
-        if (!userRole) {
-            console.warn("Role missing in Auth Response, attempting fetch profile...")
-            const profileRes = await userService.getProfile()
-            userRole = profileRes.data.roleId
-        }
+    // 🌟 เช็คความสำเร็จ
+    if (data.message === '2FA Verified Success' || response.status === 200) {
         
-        userRole = Number(userRole)
+        const storedNonce = sessionStorage.getItem('authNonce');
+        sessionStorage.removeItem('auth_email'); 
         
-        if (!userRole) {
-            throw new Error("Critical: Unable to determine user role.")
-        }
+        // 🌟 แจกบัตรผ่านด่านให้ Vue Router
+        sessionStorage.setItem('is_logged_in', 'true');
         
-        sessionStorage.setItem('roleId', userRole)
+        try {
+            let userRole = null;
 
-        // Redirect
-        if (userRole === 6) {
-             sessionStorage.setItem('is_installer', 'true')
-             router.replace('/install/create-admin')
-        } 
-        else {
-             if (userRole === 2) router.replace('/admin/dashboard')
-             else if (userRole === 4) router.replace('/callcenter/search-customer')
-             else if (userRole === 3) router.replace('/branch/dashboard')
-             else {
-                 console.error("Security: Unknown Role ID detected:", userRole)
-                 throw new Error('Access Denied: Invalid Role Permission')
-             }
+            if (data.idToken || data.user?.idToken) {
+                const tokenToDecode = data.idToken || data.user.idToken;
+                sessionStorage.setItem('idToken', tokenToDecode);
+                const decodedProfile = jwtDecode(tokenToDecode);
+                console.log("ถอดรหัส idToken สำเร็จ:", decodedProfile);
+                
+                // 🛡️ เช็ค Nonce 
+                if (storedNonce && decodedProfile.nonce) {
+                    if (decodedProfile.nonce !== storedNonce) {
+                        console.error("🚨 Security Breach: Nonce Mismatch!");
+                        sessionStorage.clear(); 
+                        throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch)");
+                    }
+                    console.log("✅ ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
+                    sessionStorage.removeItem('authNonce');
+                    sessionStorage.removeItem('authState');
+                }
+
+                // 🌟 ดึง Role อย่างรอบคอบ (เผื่อชื่อ Key เปลี่ยนไป)
+                userRole = decodedProfile.roleId || decodedProfile.role || decodedProfile.user_role;
+                
+            } else if (data.roleId || data.role || data.user?.roleId || data.user?.role) {
+                userRole = data.roleId || data.role || data.user?.roleId || data.user?.role;
+            }
+            
+            userRole = Number(userRole)
+            console.log("🔥 ได้รับ Role ID คือ:", userRole)
+
+            if (!userRole || isNaN(userRole)) {
+                throw new Error("Critical: ไม่สามารถระบุข้อมูลสิทธิ์ (Role) จากระบบได้")
+            }
+            
+            sessionStorage.setItem('roleId', userRole)
+
+            // พาเข้าหน้า Dashboard ตามสิทธิ์
+            if (userRole === 6) {
+                 sessionStorage.setItem('is_installer', 'true')
+                 router.replace('/install/create-admin')
+            } else if (userRole === 2) {
+                 router.replace('/admin/dashboard')
+            } else if (userRole === 4) {
+                 router.replace('/callcenter/search-customer')
+            } else if (userRole === 3) {
+                 router.replace('/branch/dashboard')
+            } else {
+                 throw new Error(`Access Denied: คุณไม่มีสิทธิ์เข้าใช้งานระบบ (Role: ${userRole})`)
+            }
+
+        } catch (innerError) {
+            console.error("Authorization Error:", innerError)
+            sessionStorage.removeItem('is_logged_in') // ยึดบัตรคืน
+            throw new Error(innerError.message || 'ไม่สามารถระบุสิทธิ์การใช้งานได้ กรุณาติดต่อผู้ดูแลระบบ')
         }
-
-    } catch (innerError) {
-        console.error("Authorization Error:", innerError)
-        sessionStorage.clear()
-        throw new Error('ไม่สามารถระบุสิทธิ์การใช้งานได้ กรุณาติดต่อผู้ดูแลระบบ')
+    } else {
+        throw new Error('Authentication Failed: Invalid response from server')
     }
 
   } catch (error) {
     console.error("Authentication Error:", error)
     isError.value = true
-    
-    // Clear OTP ถ้าผิด
     otpDigits.value = ['', '', '', '', '', '']
     nextTick(() => otpInputs.value[0]?.focus())
 
     if (error.response && error.response.data) {
-        errorMessage.value = error.response.data.message || 'รหัส OTP ไม่ถูกต้อง'
+        errorMessage.value = error.response.data.message || error.response.data.error || 'รหัส OTP ไม่ถูกต้อง หรือหมดเวลา'
     } else {
         errorMessage.value = error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
     }
-    
   } finally {
     isLoading.value = false
   }

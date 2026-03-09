@@ -1,21 +1,11 @@
 <template>
   <div class="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900 font-sans p-4">
-    
-    <div 
-      class="absolute inset-0 z-0"
-      :style="{ 
-        backgroundImage: `url(${bgLogin})`, 
-        backgroundSize: 'cover', 
-        backgroundPosition: 'center' 
-      }">
-    </div>
+    <div class="absolute inset-0 z-0" :style="{ backgroundImage: `url(${bgLogin})`, backgroundSize: 'cover', backgroundPosition: 'center' }"></div>
     <div class="absolute inset-0 z-0 bg-gradient-to-br from-blue-900/80 via-indigo-900/80 to-purple-900/80"></div>
-
     <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
     <div class="relative z-10 w-full max-w-lg">
-        
         <div class="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20 text-center relative pb-20">
             
             <h2 class="text-2xl font-bold mb-6 text-white tracking-tight drop-shadow-md">Scan QR Code</h2>
@@ -30,7 +20,6 @@
             </div>
 
             <div class="bg-white p-4 rounded-2xl inline-flex mb-4 shadow-lg shadow-black/20 relative">
-                
                 <div v-if="otpAuthUrl">
                     <qrcode-vue 
                         :value="otpAuthUrl" 
@@ -40,13 +29,7 @@
                         render-as="svg"
                     />
                 </div>
-
-                <img 
-                  v-else-if="fallbackQrUrl" 
-                  :src="fallbackQrUrl" 
-                  alt="QR Code" 
-                  class="w-[180px] h-[180px] object-contain mx-auto"
-                />
+                <img v-else-if="fallbackQrUrl" :src="fallbackQrUrl" alt="QR Code" class="w-[180px] h-[180px] object-contain mx-auto" />
                 
                 <div v-else-if="isLoading" class="flex flex-col items-center justify-center w-[180px] h-[180px] text-gray-400">
                    <ArrowPathIcon class="w-10 h-10 animate-spin mb-3 text-blue-500" />
@@ -70,10 +53,8 @@
                     <ArrowRightIcon class="w-4 h-4" />
                 </button>
             </div>
-
         </div>
     </div>
-
   </div>
 </template>
 
@@ -111,8 +92,6 @@ const fetchQRCode = async () => {
             throw new Error("ไม่พบข้อมูล Email กรุณา Login ใหม่")
         }
 
-        console.log("Fetching QR for:", currentEmail.value)
-
         const response = await authService.get2FAQR(currentEmail.value)
         const data = response.data
         const secretKey = data.secretKey 
@@ -122,7 +101,7 @@ const fetchQRCode = async () => {
             const appName = 'NovaPay'
             const label = `${appName}:${currentEmail.value}`
             otpAuthUrl.value = `otpauth://totp/${label}?secret=${secretKey}&issuer=${appName}`
-            sessionStorage.setItem('tempSecret', secretKey)
+            // ❌ ลบ sessionStorage.setItem('tempSecret', secretKey) ออกแล้ว ปลอดภัย 100%!
         } 
         else if (rawImageUrl) {
             const cleanBase64 = rawImageUrl.replace(/\s/g, '')
