@@ -101,7 +101,13 @@
                             </span>
                         </td>
 
-                        <td class="px-4 py-2.5 align-middle text-[10px] text-gray-500 truncate">{{ user.createdBy }}</td>
+                        <td class="px-4 py-2.5 align-middle truncate">
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-bold text-gray-800 text-[11px] truncate select-text">{{ user.createdByFullName }}</span>
+                                <span class="text-[9px] text-gray-400 font-mono truncate select-text">{{ user.createdByEmail }}</span>
+                            </div>
+                        </td>
+                        
                         <td class="px-4 py-2.5 align-middle text-[10px] text-gray-500 font-mono">{{ user.createdAt }}</td>
                         <td class="px-4 py-2.5 align-middle text-right pr-4">
                             <div class="flex justify-end gap-1">
@@ -169,7 +175,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-// 🎯 Import DocumentDuplicateIcon เข้ามาใช้งาน
 import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, TrashIcon, InboxIcon, UserCircleIcon, ShieldExclamationIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 
 import UserFormModal from '@/components/Admin/UserFormModal.vue'
@@ -196,7 +201,6 @@ const showSuccessAlert = ref(false)
 const successMessage = ref('')
 const alertType = ref('success')
 const currentRoleFilter = ref('ALL')
-// 🎯 State สำหรับเก็บข้อความเวลาปุ่ม Copy ทำงาน
 const copiedText = ref('')
 
 const masterRoleOptions = [
@@ -205,7 +209,6 @@ const masterRoleOptions = [
   { label: 'Branch Manager', value: 3 } 
 ]
 
-// 🎯 ฟังก์ชันสำหรับคัดลอกข้อความ
 const copyToClipboard = async (text) => {
     if (!text || text === '-') return
     try {
@@ -221,19 +224,18 @@ const copyToClipboard = async (text) => {
 
 // --- Computed ---
 const filteredUsers = computed(() => {
-    // เพื่อโคลน Array ออกมาเป็นตัวใหม่ จะได้ไม่กระทบ users.value ต้นฉบับ
     let result = [...users.value]
     // 1. กรองตาม Role
     if (currentRoleFilter.value !== 'ALL') {
         result = result.filter(user => user.roleId === currentRoleFilter.value)
     }
     
-    // 2. 🎯 เรียงลำดับ (Sorting Logic)
+    // 2. เรียงลำดับ (Sorting Logic)
     return result.sort((a, b) => {
         const isAInactive = a.status === 'INACTIVE'
         const isBInactive = b.status === 'INACTIVE'
         
-        // ถ้าสถานะต่างกัน: ให้ INACTIVE โดนดันไปอยู่ล่างสุด (return 1)
+        // ถ้าสถานะต่างกัน: ให้ INACTIVE โดนดันไปอยู่ล่างสุด
         if (isAInactive !== isBInactive) {
             return isAInactive ? 1 : -1
         }
@@ -284,7 +286,10 @@ const handleSearch = async () => {
 const mapUsersData = (data) => {
   if (!Array.isArray(data)) { users.value = []; return }
   
-  users.value = data.map(u => {
+  // 🌟 กำหนด Role ที่อนุญาตให้แสดงในตารางเท่านั้น (Admin, Manager, Call Center)
+  const validRoles = [2, 3, 4]
+
+  const mappedData = data.map(u => {
     let thName = u.fullNameTh || u.fullName_th || u.fullName || ''
     if (!thName && u.firstNameTh && u.lastNameTh) {
         thName = `${u.firstNameTh} ${u.lastNameTh}`
@@ -308,10 +313,15 @@ const mapUsersData = (data) => {
       branchNumber: u.branchCode || null,
       status: u.status, 
       is2faEnabled: u.is2faEnabled,
-      createdBy: u.createdBy || 'System',
+      // 🌟 ดึงข้อมูลจาก API มาแสดง
+      createdByFullName: u.createdByFullName || 'System',
+      createdByEmail: u.createdByEmail || '-',
       createdAt: u.createdAt || '-',
     }
   })
+
+  // 🌟 กรองเอาเฉพาะ Role ที่เราต้องการ (ตัด Unknown / System ออกไป)
+  users.value = mappedData.filter(user => validRoles.includes(user.roleId))
 }
 
 // 1. User Form (Create/Edit)

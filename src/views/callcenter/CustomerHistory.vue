@@ -182,13 +182,13 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DocumentMagnifyingGlassIcon,
-  ExclamationCircleIcon // 🌟 นำเข้า Icon สำหรับ Error
+  ExclamationCircleIcon 
 } from '@heroicons/vue/24/outline' 
 
 const logs = ref([])
 const isLoading = ref(false)
 const searchQuery = ref('')
-const hasSearchError = ref(false) // 🌟 เพิ่มตัวแปรเช็ค Error ช่อง Input
+const hasSearchError = ref(false) 
 
 const currentPage = ref(1)
 const itemsPerPage = 5
@@ -248,13 +248,12 @@ const getActionClass = (activity) => {
 }
 
 const handleSearch = async () => {
-    // 🌟 เปลี่ยนจากการใช้ alert เป็นการแสดง UI Error แทน
     if(!searchQuery.value) {
         hasSearchError.value = true
         return
     }
 
-    hasSearchError.value = false // ล้าง Error ถ้ามีข้อมูล
+    hasSearchError.value = false 
     isLoading.value = true
     logs.value = [] 
     currentPage.value = 1 

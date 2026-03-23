@@ -105,7 +105,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-// import PasswordInput from '@/components/PasswordInput.vue' //  ไม่ใช้แล้ว
 import PasswordRules from '@/components/PasswordRules.vue'
 import FormAlert from '@/components/FormAlert.vue'
 import { authService } from '@/services/authService'
@@ -182,7 +181,7 @@ const handleRegister = async () => {
     }
 
   } catch (error) {
-    console.error("❌ Process Error:", error)
+    console.error(" Process Error:", error)
     if (error.response && error.response.status === 400) {
         apiError.value = "อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น"
     } else if (error.response && error.response.data && error.response.data.message) {

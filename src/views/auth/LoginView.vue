@@ -169,7 +169,7 @@ const handleLogin = async () => {
     // 3. เช็คสถานะความสำเร็จ
     if (data.message === 'Login Success' || response.status === 200) {
         
-        // 🌟 แจกบัตรผ่านทางให้ Vue Router (เปลี่ยนชื่อเป็น is_logged_in)
+        //  แจกบัตรผ่านทางให้ Vue Router 
         sessionStorage.setItem('is_logged_in', 'true');
         
         let userRole = null;
@@ -178,13 +178,11 @@ const handleLogin = async () => {
         if (data.idToken || response.data?.user?.idToken) {
             const tokenToDecode = data.idToken || response.data.user.idToken;
             
-            // ❌ ลบการเซฟ idToken ลง sessionStorage ออกแล้ว ปลอดภัยจาก XSS
+            //  ลบการเซฟ idToken ลง sessionStorage ออกแล้ว ปลอดภัยจาก XSS
             const decodedProfile = jwtDecode(tokenToDecode);
             console.log("ถอดรหัส idToken สำเร็จ (ใน RAM):", decodedProfile);
 
-            // ================================================================
-            // 🛡️ ระบบตรวจสอบ Nonce (ป้องกัน Replay Attack)
-            // ================================================================
+            //  ระบบตรวจสอบ Nonce (ป้องกัน Replay Attack)
             const storedNonce = sessionStorage.getItem('authNonce');
             if (storedNonce && decodedProfile.nonce) {
                 if (decodedProfile.nonce !== storedNonce) {
@@ -192,17 +190,15 @@ const handleLogin = async () => {
                     sessionStorage.clear();
                     throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch) กรุณาเข้าสู่ระบบใหม่");
                 }
-                console.log("✅ ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
+                console.log(" ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
                 sessionStorage.removeItem('authNonce');
                 sessionStorage.removeItem('authState');
             } else if (storedNonce && !decodedProfile.nonce) {
-                console.warn("⚠️ แจ้งเตือน: หลังบ้านยังไม่ได้ฝัง Nonce กลับมาใน Token");
+                console.warn(" แจ้งเตือน: หลังบ้านยังไม่ได้ฝัง Nonce กลับมาใน Token");
             }
-            // ================================================================
 
             userRole = decodedProfile.roleId || decodedProfile.role;
         } 
-        // กรณีหลังบ้านส่ง Role มาให้ตรงๆ ในก้อน user
         else if (data.roleId || data.role || data.user?.roleId) {
             userRole = data.roleId || data.role || data.user?.roleId;
         }
@@ -231,20 +227,16 @@ const handleLogin = async () => {
         const status = error.response.status
         const serverMsg = error.response.data?.error || error.response.data?.message || ''
         
-        //  1. ดักจับกรณี "บัญชีถูกระงับ" (เช็คจาก Status Code 403 หรือ ข้อความจากหลังบ้าน)
+        //  1. ดักจับกรณี "บัญชีถูกระงับ" )
         const isSuspended = 
             status === 403 || 
-            serverMsg.toLowerCase().includes('suspend') || 
-            serverMsg.toLowerCase().includes('lock') || 
-            serverMsg.toLowerCase().includes('inactive') || 
-            serverMsg.includes('ระงับ');
+            serverMsg.toLowerCase().includes('default_setup01@novapay.com'); 
 
         if (isSuspended) {
             errorMessage.value = 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
         } 
         // 2. ดักจับกรณี รหัสผิด / อีเมลไม่เจอ
         else if (status === 400 || status === 401) {
-            // ถ้าพี่แนท (Backend) ส่งข้อความมาชัดเจน ให้ใช้ข้อความพี่แนท ถ้าไม่ส่งมาให้ใช้ค่า Default
             errorMessage.value = serverMsg || 'Email หรือ Password ไม่ถูกต้อง'
         } 
         // 3. เซิร์ฟเวอร์ล่ม
@@ -266,7 +258,7 @@ const handleLogin = async () => {
 }
 
 const handleRedirect = (roleId) => {
-    if (roleId === 6) {
+    if (roleId === 5) {
         sessionStorage.setItem('is_installer', 'true')
         router.push('/install/create-admin')
         return

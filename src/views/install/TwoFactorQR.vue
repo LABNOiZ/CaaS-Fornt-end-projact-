@@ -101,7 +101,6 @@ const fetchQRCode = async () => {
             const appName = 'NovaPay'
             const label = `${appName}:${currentEmail.value}`
             otpAuthUrl.value = `otpauth://totp/${label}?secret=${secretKey}&issuer=${appName}`
-            // ❌ ลบ sessionStorage.setItem('tempSecret', secretKey) ออกแล้ว ปลอดภัย 100%!
         } 
         else if (rawImageUrl) {
             const cleanBase64 = rawImageUrl.replace(/\s/g, '')

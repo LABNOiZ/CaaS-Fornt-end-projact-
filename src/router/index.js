@@ -128,7 +128,7 @@ router.beforeEach((to, from, next) => {
   
   const isInstaller = sessionStorage.getItem('is_installer') === 'true' || userRoleId === 6
 
-  // 🌟 Helper ฟังก์ชัน: เตะผู้ใช้กลับไปหน้าหลักตาม Role ของตัวเอง
+  //  Helper ฟังก์ชัน: เตะผู้ใช้กลับไปหน้าหลักตาม Role ของตัวเอง
   const redirectToHome = () => {
       if (userRoleId === 2) return '/admin/dashboard'
       if (userRoleId === 4) return '/callcenter/search-customer'
@@ -149,7 +149,7 @@ router.beforeEach((to, from, next) => {
       return next(redirectToHome())
   }
 
-  // Case 3: ป้องกัน Installer (Role 6) แอบหนีไปเข้า Dashboard ทั่วไป
+  // Case 3: ป้องกัน Installer แอบหนีไปเข้า Dashboard ทั่วไป
   if (isAuthenticated && isInstaller && (to.path.startsWith('/admin') || to.path.startsWith('/branch') || to.path.startsWith('/callcenter'))) {
       return next('/install/create-admin')
   }
@@ -167,8 +167,8 @@ router.beforeEach((to, from, next) => {
       return next(redirectToHome())
   }
 
-  // 🛡️ Case 5 (อัปเกรดใหม่!): Role Guard ป้องกันข้ามโซนเด็ดขาด (Ironclad Security) 
-  // ดักจับจาก URL Path โดยตรง ปลอดภัยที่สุด 100% ต่อให้มี Sub-routes ลึกแค่ไหนก็ไม่หลุด!
+  //  Case 5: Role Guard ป้องกันข้ามโซนเด็ดขาด (Ironclad Security) 
+  // ดักจับจาก URL Path โดยตรง 
   if (isAuthenticated && !isInstaller) {
       if (to.path.startsWith('/admin') && userRoleId !== 2) {
           return next(redirectToHome()) // ถ้าเข้า /admin แต่ไม่ใช่ Role 2 เตะกลับทันที

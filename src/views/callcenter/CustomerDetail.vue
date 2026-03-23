@@ -10,8 +10,8 @@
       >
         <div v-if="alert.show" class="pointer-events-auto min-w-[350px]">
           <div :class="['p-4 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-md', alert.type === 'success' ? 'bg-green-50/90 border-green-200 text-green-800' : 'bg-red-50/90 border-red-200 text-red-800']">
-             <span v-if="alert.type === 'success'" class="bg-green-500 text-white p-1 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></span>
-             <span v-else class="bg-red-500 text-white p-1 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
+             <span v-if="alert.type === 'success'" class="bg-green-500 text-white p-1 rounded-full shadow-sm"><CheckIcon class="h-4 w-4" /></span>
+             <span v-else class="bg-red-500 text-white p-1 rounded-full shadow-sm"><XMarkIcon class="h-4 w-4" /></span>
              <span class="font-bold text-sm tracking-wide">{{ alert.message }}</span>
           </div>
         </div>
@@ -61,18 +61,16 @@
         </div>
 
         <div v-if="customer">
-          
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 min-h-[580px] content-start">
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start min-h-[580px] content-start">
             
             <div v-for="card in paginatedCards" :key="card.cardId" 
-                 class="bg-white rounded-3xl shadow-sm border transition-all duration-300 hover:shadow-md flex flex-col h-full transform hover:-translate-y-1" 
+                 class="bg-white rounded-3xl shadow-sm border transition-all duration-300 hover:shadow-md flex flex-col transform hover:-translate-y-1" 
                  :class="showAddressRequestBox(card.cardId) ? 'border-blue-400 ring-2 ring-blue-400/20' : 'border-gray-200'">
               
               <div class="relative p-6 sm:p-8 flex flex-col justify-between overflow-hidden rounded-t-3xl aspect-[1.586/1] bg-gradient-to-br from-slate-700 to-slate-900 shadow-inner">
-                  
                   <div v-if="card.cardImage || card.card_image" 
-                       class="absolute inset-0 z-0 bg-cover bg-center opacity-70 mix-blend-overlay"
-                       :style="{ backgroundImage: `url(${card.cardImage || card.card_image})` }">
+                       class="absolute inset-0 z-0 bg-cover bg-center " 
+                       :style="{ backgroundImage: `url(data:image/png;base64,${card.cardImage || card.card_image})` }" >
                   </div>
                   <div class="relative z-10 flex justify-end items-start">
                      <span class="text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-md border border-white/20"
@@ -85,7 +83,6 @@
                   <div class="relative z-10 mt-auto pt-4">
                     <div class="flex justify-between items-end mb-1">
                       <p class="text-white/90 text-[10px] font-medium drop-shadow-sm">เลขบัตร</p>
-                      
                       <button @click="toggleCardNumber(card)" 
                               class="text-white/70 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all flex items-center justify-center min-w-[28px] min-h-[28px]"
                               title="แสดง/ซ่อนเลขบัตร"
@@ -97,7 +94,6 @@
                         </template>
                       </button>
                     </div>
-
                     <p class="text-xl sm:text-2xl font-extrabold text-white tracking-[0.15em] sm:tracking-[0.2em] font-mono drop-shadow-md transition-all duration-300">
                      {{ formatCardNumber(revealedCards[card.cardId] ? card.fullCardNumber : (card.cardNumber || card.card_number || card.cardNo), revealedCards[card.cardId]) }}
                     </p>
@@ -123,7 +119,7 @@
                   </div>
               </div>
 
-              <div class="p-5 bg-gray-50/80 flex-1 flex flex-col gap-4 rounded-b-3xl border-t border-gray-100">
+              <div class="p-5 bg-gray-50/80 flex flex-col gap-4 rounded-b-3xl border-t border-gray-100">
                 
                 <div v-if="!isCardVirtual(card) && card.status === 'inactive'" class="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm">
                     <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
@@ -146,37 +142,51 @@
                 <div v-if="card.status === 'inactive' && !isCardVirtual(card)" class="mt-auto">
                     
                     <div v-if="showAddressRequestBox(card.cardId)" 
-                         class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm mb-4 relative overflow-hidden">
+                         class="bg-white rounded-xl p-4 border shadow-sm mb-4 relative overflow-hidden"
+                         :class="getRequestStatusData(card.cardId).borderClass">
                         
-                        <div class="absolute left-0 top-0 bottom-0 w-1.5" 
-                             :class="isRequestApproved(card.cardId) ? 'bg-green-500' : 'bg-orange-400'">
-                        </div>
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="getRequestStatusData(card.cardId).bgClass"></div>
 
                         <div class="flex justify-between items-start mb-2 pl-4">
-                            <span class="font-bold text-xs flex items-center gap-1.5" 
-                                  :class="isRequestApproved(card.cardId) ? 'text-green-600' : 'text-orange-600'">
+                            <span class="font-bold text-xs flex items-center gap-1.5" :class="getRequestStatusData(card.cardId).colorClass">
                                 <span class="relative flex h-2 w-2">
-                                  <span v-if="!isRequestApproved(card.cardId)" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                  <span class="relative inline-flex rounded-full h-2 w-2" :class="isRequestApproved(card.cardId) ? 'bg-green-500' : 'bg-orange-500'"></span>
+                                  <span v-if="getRequestStatusData(card.cardId).isPing" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="getRequestStatusData(card.cardId).bgClass"></span>
+                                  <span class="relative inline-flex rounded-full h-2 w-2" :class="getRequestStatusData(card.cardId).bgClass"></span>
                                 </span>
-                                {{ isRequestApproved(card.cardId) ? 'ผู้จัดการสาขาอนุมัติแล้ว' : 'รอผู้จัดการสาขาอนุมัติ...' }}
+                                {{ getRequestStatusData(card.cardId).text }}
                             </span>
+                            
+                            <button v-if="changeRequestMap[card.cardId]?.status === 'PENDING'"
+                                    @click="openCancelModal(changeRequestMap[card.cardId].requestId, card.cardId)"
+                                    class="text-[10px] text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 hover:border-red-200 px-2 py-1 rounded-md font-bold transition-colors flex items-center gap-1 shadow-sm">
+                                <NoSymbolIcon class="w-3 h-3" /> ยกเลิกคำร้อง
+                            </button>
                         </div>
+
+                        <div v-if="changeRequestMap[card.cardId]?.status === 'REJECTED'" class="text-[11px] text-red-700 bg-red-50/50 p-2 rounded-lg border border-red-100 ml-4 mb-2 flex flex-col gap-0.5">
+                            <span class="font-bold uppercase tracking-wider">เหตุผลที่ไม่อนุมัติ:</span>
+                            <span>{{ getRequestStatusData(card.cardId).reason }}</span>
+                        </div>
+
                         <div class="text-xs text-gray-700 break-words pl-4 bg-gray-50 p-2.5 rounded-lg border border-gray-100 mt-2">
                              <span class="font-bold text-gray-800 block mb-0.5">ที่อยู่จัดส่งใหม่:</span> {{ getPendingAddress(card.cardId) }}
                         </div>
                         <div class="text-[10px] text-gray-400 mt-2 pl-4 flex items-center gap-1 font-medium">
                             <span>ส่งโดย: {{ changeRequestMap[card.cardId].requester || 'Call Center' }}</span>
                             <span class="mx-1">•</span>
-                            <span>{{ formatDate(changeRequestMap[card.cardId].requestDate) }}</span>
+                            <span>{{ formatFullDate(changeRequestMap[card.cardId].requestDate) }}</span>
                         </div>
                     </div>
 
-                    <button v-if="!isShippingOrSuccess(card.cardId)"
+                    <button v-if="!isShippingOrSuccess(card.cardId) && changeRequestMap[card.cardId]?.status !== 'PENDING'"
                             @click="openAddressModal(card)" 
                             class="w-full bg-white border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-700 hover:text-blue-700 font-bold py-3 rounded-xl transition-all duration-200 text-xs flex justify-center items-center gap-2 group">
                         <TruckIcon class="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                        {{ showAddressRequestBox(card.cardId) ? 'แก้ไขข้อมูล / ส่งเรื่องเปลี่ยนที่อยู่อีกครั้ง' : 'แจ้งเปลี่ยนที่อยู่จัดส่งบัตรใหม่' }}
+                        {{ 
+                           changeRequestMap[card.cardId]?.status === 'REJECTED' ? 'แก้ไขข้อมูล / ส่งเรื่องใหม่' : 
+                           changeRequestMap[card.cardId]?.status === 'APPROVED' ? 'แจ้งเปลี่ยนที่อยู่อีกครั้ง' : 
+                           'แจ้งเปลี่ยนที่อยู่จัดส่งบัตรใหม่' 
+                        }}
                     </button>
                 </div>
 
@@ -188,7 +198,6 @@
 
               </div>
             </div>
-            
           </div>
           
           <div v-if="paginatedCards.length === 0" class="text-center py-16 text-gray-400 bg-white rounded-3xl border-2 border-dashed border-gray-200 mt-6">
@@ -208,18 +217,27 @@
     </div>
 
     <SuspendCardModal :isOpen="isSuspendModalOpen" :isLoading="isSubmitting" @close="closeSuspendModal" @confirm="handleSuspendConfirm" />
-    
     <AddressChangeModal :isOpen="isAddressModalOpen" :isLoading="isSubmitting" :currentAddress="currentCardAddress" :cardLabel="selectedAddressCard ? `Mastercard ${formatCardNumber(selectedAddressCard.cardNumber || selectedAddressCard.card_number, false)}` : ''" @close="closeAddressModal" @submit="handleAddressSubmit" />
+    <CancelRequestModal :isOpen="isCancelModalOpen" :isLoading="isSubmitting" @close="closeCancelModal" @confirm="confirmCancelRequest" />
+
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeftIcon, ArrowRightIcon, NoSymbolIcon, TruckIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline' 
-// 🌟 นำเข้า getCardSensitive จาก Service
-import { getCustomerById, lockCard, getCardTracking, requestAddressChange, getAddressChangeHistory, getCardSensitive } from '@/services/callCenterService'
+import { 
+    ArrowLeftIcon, ArrowRightIcon, NoSymbolIcon, TruckIcon, 
+    EyeIcon, EyeSlashIcon, CheckIcon, XMarkIcon 
+} from '@heroicons/vue/24/outline' 
+
+import { 
+    getCustomerById, lockCard, getCardTracking, requestAddressChange, 
+    getAddressChangeHistory, getCardSensitive, cancelAddressChange 
+} from '@/services/callCenterService'
+
 import SuspendCardModal from '@/components/CallCenter/SuspendCardModal.vue'
 import AddressChangeModal from '@/components/CallCenter/AddressChangeModal.vue'
+import CancelRequestModal from '@/components/CallCenter/CancelRequestModal.vue'
 
 const route = useRoute(); const router = useRouter();
 const customer = ref(null); const activeTab = ref('virtual');
@@ -228,45 +246,26 @@ const trackingMap = ref({}); const changeRequestMap = ref({});
 const isSubmitting = ref(false);
 const alert = reactive({ show: false, type: 'success', message: '' })
 
-// 🌟 State สำหรับเก็บข้อมูลการเปิดดูเลขบัตร
-const revealedCards = ref({})
-const isLoadingSensitive = ref({}) // State สำหรับแสดง Loading ตอนยิง API
+const revealedCards = ref({}); const isLoadingSensitive = ref({});
 
-// 🌟 ฟังก์ชันดึงเลขเต็ม (ยิง API)
 const toggleCardNumber = async (card) => {
     const cid = card.cardId
-    
-    // ถ้าบัตรกำลังเปิดอยู่ ให้ปิดกลับไปเหมือนเดิม
-    if (revealedCards.value[cid]) {
-        revealedCards.value[cid] = false
-        return
-    }
-
-    // ถ้ายังไม่เปิด ให้ยิง API ไปขอข้อมูลเต็ม
+    if (revealedCards.value[cid]) { revealedCards.value[cid] = false; return }
     try {
         isLoadingSensitive.value[cid] = true
         const res = await getCardSensitive(cid)
-        const sensitiveData = res.data
-
-        // เอาข้อมูลจริงที่ได้มายัดใส่ใน Object ของ Card ใบนั้น
-        card.fullCardNumber = sensitiveData.cardNumber
-        card.fullExpiry = sensitiveData.expiry
-        card.cvv = sensitiveData.cvv
-
-        revealedCards.value[cid] = true // เปิดตาสำเร็จ
+        card.fullCardNumber = res.data.cardNumber
+        card.fullExpiry = res.data.expiry
+        revealedCards.value[cid] = true
     } catch (error) {
-        console.error("Failed to fetch sensitive data", error)
-        showAlert('error', 'ไม่สามารถดึงข้อมูลบัตรเต็มได้ อาจไม่มีสิทธิ์เข้าถึง')
-    } finally {
-        isLoadingSensitive.value[cid] = false
-    }
+        showAlert('error', 'ไม่สามารถดึงข้อมูลบัตรเต็มได้')
+    } finally { isLoadingSensitive.value[cid] = false }
 }
 
-// Modal States
-const isSuspendModalOpen = ref(false)
-const isAddressModalOpen = ref(false)
-const selectedCard = ref(null) 
-const selectedAddressCard = ref(null)
+const isSuspendModalOpen = ref(false); const isAddressModalOpen = ref(false);
+const selectedCard = ref(null); const selectedAddressCard = ref(null);
+const isCancelModalOpen = ref(false);
+const activeCancelRequestId = ref(null); const activeCancelCardId = ref(null);
 
 const showAlert = (type, message) => {
   alert.type = type; alert.message = message; alert.show = true;
@@ -281,52 +280,80 @@ onMounted(async () => {
     if(customer.value && customer.value.cards) {
         await fetchAdditionalCardInfo(userId, customer.value.cards)
     }
-  } catch (error) {
-    console.error("Fetch Error:", error)
-    showAlert('error', 'ไม่สามารถดึงข้อมูลลูกค้าได้')
-  }
+  } catch (error) { showAlert('error', 'ไม่สามารถดึงข้อมูลลูกค้าได้') }
 })
 
 const fetchAdditionalCardInfo = async (userId, cards) => {
     try {
         const historyRes = await getAddressChangeHistory(userId)
-        const history = historyRes.data || []
+        let history = historyRes.data || []
+        
+        // เรียงลำดับจาก "ใหม่ไปเก่า" เพื่อให้ Loop ด้านล่างเลือกตัวล่าสุดเสมอ
+        history.sort((a, b) => new Date(b.createAt) - new Date(a.createAt));
+
+        // ล้างข้อมูลเก่าก่อน
+        changeRequestMap.value = {}; 
+
         history.forEach(req => {
-            if(['PENDING', 'APPROVED'].includes(req.status)) {
-                changeRequestMap.value[req.cardId] = req
+            // ถ้าบัตรใบนี้ยังไม่มีข้อมูลใน Map (แปลว่ารายการแรกที่เจอคืออันล่าสุด) ให้เก็บค่าไว้
+            if(!changeRequestMap.value[req.cardId]) {
+                if(['PENDING', 'APPROVED', 'REJECTED'].includes(req.status)) {
+                    changeRequestMap.value[req.cardId] = {
+                        ...req,
+                        newAddressFull: `${req.address || ''} ต.${req.subdistrict || ''} อ.${req.district || ''} จ.${req.province || ''} ${req.zipcode || ''}`.trim(),
+                        requester: req.createdBy || 'Call Center',
+                        requestDate: req.createAt || new Date().toISOString() 
+                    }
+                }
             }
-        })
-    } catch (err) { console.error("Failed to load address history", err) }
+        });
+    } catch (err) { console.error("History Error", err) }
 
     const physicalCards = cards.filter(c => !isCardVirtual(c))
     for(const card of physicalCards) {
         try {
             const trackRes = await getCardTracking(card.cardId)
             trackingMap.value[card.cardId] = trackRes.data
-        } catch (err) { /* Silent fail */ }
+        } catch (err) {}
     }
 }
 
-// --- Badge Logic ---
+const getRequestStatusData = (cardId) => {
+    const req = changeRequestMap.value[cardId];
+    if (!req) return {};
+    switch (req.status) {
+        case 'APPROVED':
+            return {
+                text: 'ผู้จัดการสาขาอนุมัติแล้ว',
+                colorClass: 'text-green-600', bgClass: 'bg-green-500', borderClass: 'border-green-200 bg-green-50/30',
+                isPing: false
+            };
+        case 'REJECTED':
+            return {
+                text: 'ผู้จัดการสาขาไม่อนุมัติ',
+                colorClass: 'text-red-600', bgClass: 'bg-red-500', borderClass: 'border-red-200 ring-1 ring-red-100 bg-red-50/30',
+                isPing: false,
+                reason: req.branchReason || req.rejectReason || 'กรุณาตรวจสอบข้อมูลหรือติดต่อสาขา'
+            };
+        case 'PENDING':
+        default:
+            return {
+                text: 'รอผู้จัดการสาขาอนุมัติ...',
+                colorClass: 'text-orange-600', bgClass: 'bg-orange-500', borderClass: 'border-gray-200',
+                isPing: true
+            };
+    }
+}
+
 const getCardStatusBadge = (card) => {
     const status = card.status?.toLowerCase() || ''
-    
-    if (status === 'active') {
-        return { label: 'เปิดใช้งานบัตรแล้ว', bg: 'bg-green-500/20 border-green-400/30', text: 'text-green-300', dot: 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]' }
-    }
-    if (status === 'inactive') {
-        return { label: 'ยังไม่เปิดใช้งานบัตร', bg: 'bg-white/20 border-white/30', text: 'text-white', dot: 'bg-gray-200' }
-    }
-    if (status === 'locked') {
-        return { label: 'Call Center อายัดบัตร', bg: 'bg-red-500/20 border-red-400/30', text: 'text-red-300', dot: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' }
-    }
-    if (status === 'frozen') {
-        return { label: 'Mobile ปิดใช้งาน', bg: 'bg-orange-500/20 border-orange-400/30', text: 'text-orange-300', dot: 'bg-orange-400 shadow-[0_0_8px_rgba(2fb,146,60,0.8)]' }
-    }
+    if (status === 'active') return { label: 'เปิดใช้งานบัตรแล้ว', bg: 'bg-green-500/20 border-green-400/30', text: 'text-green-300', dot: 'bg-green-400' }
+    if (status === 'inactive') return { label: 'ยังไม่เปิดใช้งานบัตร', bg: 'bg-white/20 border-white/30', text: 'text-white', dot: 'bg-gray-200' }
+    if (status === 'locked') return { label: 'Call Center อายัดบัตร', bg: 'bg-red-500/20 border-red-400/30', text: 'text-red-300', dot: 'bg-red-500' }
+    if (status === 'frozen') return { label: 'Mobile ปิดใช้งาน', bg: 'bg-orange-500/20 border-orange-400/30', text: 'text-orange-300', dot: 'bg-orange-400' }
     return { label: status, bg: 'bg-white/20 border-white/30', text: 'text-white', dot: 'bg-gray-200' }
 }
 
-// --- Delivery Status Logic ---
 const getDeliveryStatusText = (cardId) => {
     const tracking = trackingMap.value[cardId]
     const status = tracking?.delivery_status?.toLowerCase() || 'pending' 
@@ -342,81 +369,49 @@ const getDeliveryStatusColor = (cardId) => {
     return 'text-orange-500' 
 }
 
-// --- Logic กล่องสถานะและปุ่ม ---
-const showAddressRequestBox = (cardId) => {
-    return !!changeRequestMap.value[cardId]
-}
-
+const showAddressRequestBox = (cardId) => { return !!changeRequestMap.value[cardId] }
 const isShippingOrSuccess = (cardId) => {
     const tracking = trackingMap.value[cardId]
     const status = tracking?.delivery_status?.toLowerCase() || ''
     return ['in_transite', 'in_transit', 'success', 'delivered'].includes(status)
 }
 
-const isRequestApproved = (cardId) => {
-    return changeRequestMap.value[cardId]?.status === 'APPROVED'
-}
-
 const getPendingAddress = (cardId) => { return changeRequestMap.value[cardId]?.newAddressFull || '-' }
 
-// --- Standard Logic ---
 const formatDate = (dateString) => {
-  if (!dateString) return ''
-  if (dateString.includes('*')) return '**/**' // รองรับกรณีถูก Mask อยู่
-  if (dateString.includes('/')) return dateString;
+  if (!dateString || dateString.includes('*')) return '**/**' 
   const date = new Date(dateString)
   if (isNaN(date.getTime())) return dateString; 
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear().toString().slice(-2)
-  return `${month}/${year}`
+  return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear().toString().slice(-2)}`
 }
 
-// 🌟 ปรับปรุง Format ฟังก์ชันให้ฉลาดขึ้น
+const formatFullDate = (dateString) => {
+  if (!dateString) return '-'
+  const parsedDate = new Date(dateString.replace(' ', 'T')); 
+  if (isNaN(parsedDate.getTime())) return dateString;
+  return `${parsedDate.getDate().toString().padStart(2, '0')}/${(parsedDate.getMonth() + 1).toString().padStart(2, '0')}/${parsedDate.getFullYear()} ${parsedDate.getHours().toString().padStart(2, '0')}:${parsedDate.getMinutes().toString().padStart(2, '0')}`
+}
+
 const formatCardNumber = (cardNumber, isRevealed = false) => {
   if (!cardNumber) return ''
-  
-  // ถ้ายังถูกปิดตาอยู่ และเลขที่ได้มาจากหลังบ้านมีดอกจันอยู่แล้ว ให้คืนค่านั้นเลย
-  if (!isRevealed && cardNumber.includes('*')) {
-      return cardNumber
-  }
-
-  // ล้างช่องว่างและตัวอักษรพิเศษออกให้หมดเพื่อฟอร์แมตใหม่
+  if (!isRevealed && cardNumber.includes('*')) return cardNumber
   const cleanNumber = cardNumber.replace(/[\s*]/g, '')
-
-  if (isRevealed) {
-      // โชว์เลขเต็ม เว้นวรรคทุกๆ 4 หลัก
-      return cleanNumber.replace(/(.{4})/g, '$1 ').trim()
-  } else {
-      // ถ้าไม่มีดอกจันมาจากหลังบ้าน (เช่น ส่งมา 16 หลัก) เราต้อง Mask หน้าบ้านเอง
-      if (cleanNumber.length <= 4) return cleanNumber 
-      const last4 = cleanNumber.slice(-4)
-      return `•••• •••• •••• ${last4}`
-  }
+  return isRevealed ? cleanNumber.replace(/(.{4})/g, '$1 ').trim() : `•••• •••• •••• ${cleanNumber.slice(-4)}`
 }
 
-const isCardVirtual = (card) => {
-    return String(card.isVirtual).toLowerCase() === 'true' || card.isVirtual === true || card.isVirtual === 1;
-}
-const goBack = () => { router.go(-1) }
-const changeTab = (tabName) => { activeTab.value = tabName; currentPage.value = 1 }
+const isCardVirtual = (card) => String(card.isVirtual).toLowerCase() === 'true' || card.isVirtual === true || card.isVirtual === 1;
+const goBack = () => router.go(-1);
+const changeTab = (tabName) => { activeTab.value = tabName; currentPage.value = 1 };
 const allCardsInTab = computed(() => {
   if (!customer.value || !customer.value.cards) return []
-  return customer.value.cards.filter(card => {
-    const isVirtual = isCardVirtual(card);
-    return activeTab.value === 'virtual' ? isVirtual : !isVirtual
-  })
+  return customer.value.cards.filter(card => activeTab.value === 'virtual' ? isCardVirtual(card) : !isCardVirtual(card))
 })
-const paginatedCards = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return allCardsInTab.value.slice(start, end)
-})
+const paginatedCards = computed(() => allCardsInTab.value.slice((currentPage.value - 1) * itemsPerPage, currentPage.value * itemsPerPage))
 const totalPages = computed(() => Math.ceil(allCardsInTab.value.length / itemsPerPage))
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
 const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
 const goToPage = (page) => { currentPage.value = page }
 
-// --- Action Logic ---
 const openSuspendModal = (card) => { selectedCard.value = card; isSuspendModalOpen.value = true }
 const closeSuspendModal = () => { isSuspendModalOpen.value = false; selectedCard.value = null }
 const handleSuspendConfirm = async (reason) => {
@@ -426,60 +421,59 @@ const handleSuspendConfirm = async (reason) => {
         await lockCard(selectedCard.value.cardId, reason)
         const card = customer.value.cards.find(c => c.cardId === selectedCard.value.cardId)
         if (card) card.status = 'locked'
-        showAlert('success', 'อายัดบัตรเรียบร้อยแล้ว')
-        closeSuspendModal()
-    } catch (error) { showAlert('error', 'เกิดข้อผิดพลาดในการอายัดบัตร') } finally { isSubmitting.value = false }
+        showAlert('success', 'อายัดบัตรเรียบร้อยแล้ว'); closeSuspendModal()
+    } catch (error) { showAlert('error', 'เกิดข้อผิดพลาด') } finally { isSubmitting.value = false }
 }
 
 const openAddressModal = (card) => { selectedAddressCard.value = card; isAddressModalOpen.value = true }
-const closeAddressModal = () => { isAddressModalOpen.value = false; selectedAddressCard.value = null; showAlert('error', 'ยกเลิกการทำรายการ') }
+const closeAddressModal = () => { isAddressModalOpen.value = false; selectedAddressCard.value = null }
 
 const currentCardAddress = computed(() => {
     if (!selectedAddressCard.value) return '';
-
     const trackInfo = trackingMap.value[selectedAddressCard.value.cardId];
-    if (trackInfo) {
-        return [
-            trackInfo.address,
-            trackInfo.district ? `ต.${trackInfo.district}` : '',
-            trackInfo.amphoe ? `อ.${trackInfo.amphoe}` : '',
-            trackInfo.province ? `จ.${trackInfo.province}` : '',
-            trackInfo.zipcode
-        ].filter(Boolean).join(' ');
-    }
-
-    if (customer.value) {
-        const c = customer.value;
-        return [
-            c.address || c.addressNo,
-            c.subDistrict ? `ต.${c.subDistrict}` : '',
-            c.district ? `อ.${c.district}` : '',
-            c.province ? `จ.${c.province}` : '',
-            c.zipcode
-        ].filter(Boolean).join(' ');
-    }
-    return 'ไม่พบข้อมูลที่อยู่';
+    const c = customer.value;
+    const data = trackInfo || c;
+    return [ data.address || data.addressNo, data.subdistrict || data.district || data.subDistrict, data.district || data.amphoe, data.province, data.zipcode].filter(Boolean).join(' ');
 })
 
+// เมื่อส่งที่อยู่ใหม่สำเร็จ ให้ล้างค่าเก่าทิ้ง และโหลดใหม่ทันที
 const handleAddressSubmit = async (formData) => {
     if(!selectedAddressCard.value) return
     isSubmitting.value = true
+    const cardId = selectedAddressCard.value.cardId;
+
     try {
-        const payload = { userId: customer.value.userId, cardId: selectedAddressCard.value.cardId, ...formData }
-        await requestAddressChange(payload)
+        const payload = { userId: customer.value.userId, cardId: cardId, ...formData }
+        await requestAddressChange(payload) 
         
-        const fullAddress = `${formData.address} ต.${formData.subdistrict} อ.${formData.district} จ.${formData.province} ${formData.zipcode}`
+        // 1. ล้างสถานะเก่าออกทันทีจากหน้าจอ (Force Clear)
+        delete changeRequestMap.value[cardId];
+
+        // 2. โหลดข้อมูลประวัติล่าสุดจาก API เพื่ออัปเดต UI เป็น PENDING
+        await fetchAdditionalCardInfo(customer.value.userId, customer.value.cards)
         
-        changeRequestMap.value[selectedAddressCard.value.cardId] = {
-            cardId: selectedAddressCard.value.cardId,
-            status: 'PENDING',
-            newAddressFull: fullAddress,
-            requester: 'Call Center (You)',
-            requestDate: new Date().toISOString()
-        }
-        showAlert('success', 'ส่งคำร้องเรียบร้อยแล้ว รอผู้จัดการอนุมัติ')
-        isAddressModalOpen.value = false
-        selectedAddressCard.value = null
-    } catch (error) { showAlert('error', 'ส่งคำร้องไม่สำเร็จ') } finally { isSubmitting.value = false }
+        showAlert('success', 'ส่งเรื่องขอแก้ไขที่อยู่ใหม่เรียบร้อยแล้ว'); 
+        isAddressModalOpen.value = false;
+        selectedAddressCard.value = null;
+    } catch (error) { 
+        showAlert('error', 'ส่งคำร้องไม่สำเร็จ'); 
+    } finally { 
+        isSubmitting.value = false; 
+    }
+}
+
+const openCancelModal = (requestId, cardId) => {
+    if (!requestId) return showAlert('error', 'ไม่พบรหัสคำร้อง');
+    activeCancelRequestId.value = requestId; activeCancelCardId.value = cardId; isCancelModalOpen.value = true
+}
+const closeCancelModal = () => { isCancelModalOpen.value = false; activeCancelRequestId.value = null }
+const confirmCancelRequest = async (reason) => {
+    if (!activeCancelRequestId.value) return;
+    isSubmitting.value = true
+    try {
+        await cancelAddressChange(activeCancelRequestId.value, reason);
+        delete changeRequestMap.value[activeCancelCardId.value];
+        showAlert('success', 'ยกเลิกคำร้องเรียบร้อยแล้ว'); closeCancelModal()
+    } catch (error) { showAlert('error', 'ยกเลิกไม่สำเร็จ') } finally { isSubmitting.value = false }
 }
 </script>

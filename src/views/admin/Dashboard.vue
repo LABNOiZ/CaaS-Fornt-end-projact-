@@ -153,7 +153,7 @@ import {
   PhoneIcon,
   TruckIcon,
   CreditCardIcon
-} from '@heroicons/vue/24/solid' // *แนะนำให้ใช้ Solid หรือ Outline ก็ได้ครับ
+} from '@heroicons/vue/24/solid' 
 
 const currentDateTime = ref('')
 
@@ -167,7 +167,6 @@ const stats = ref({
   cardDeliverySuccess: 0
 })
 
-// ฟังก์ชันจัดรูปแบบตัวเลข (ใส่ลูกน้ำ)
 const formatNumber = (num) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
@@ -195,8 +194,7 @@ const fetchDashboardData = async () => {
 
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
-    // Optional: ใส่ค่า Mock เพื่อดูความสวยงามตอน Dev
-    // stats.value = { totalMobileUsers: 12500, totalWebUsers: 340, totalAdmins: 5, totalBranchManagers: 12, totalCallCenters: 45, cardDeliveryPending: 120, cardDeliverySuccess: 5600 }
+    
   }
 }
 

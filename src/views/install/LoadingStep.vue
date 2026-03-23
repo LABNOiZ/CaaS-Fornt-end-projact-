@@ -48,7 +48,6 @@ const route = useRoute()
 
 onMounted(() => {
   setTimeout(() => {
-    // ไม่ต้องแก้ storage เพราะหน้านี้แค่ redirect แต่ปลายทางใช้ sessionStorage
     router.push({path: '/install/success' })
   }, 2000) 
 })

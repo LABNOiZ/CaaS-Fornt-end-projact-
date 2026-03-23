@@ -44,7 +44,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router' 
 import bgLogin from '@/assets/bg-login_1.png'
-import { CheckIcon } from '@heroicons/vue/24/solid' // เอา Icon ปุ่มออกแล้ว
+import { CheckIcon } from '@heroicons/vue/24/solid' 
 
 const router = useRouter()
 const countdown = ref(5) 

@@ -65,7 +65,7 @@
         </div>
         
         <div v-if="isError" class="mt-2 text-[10px] text-red-500 font-bold flex items-center gap-1 animate-pulse">
-            ⚠️ กรุณาระบุชื่อผู้ใช้ภาษาไทยให้ถูกต้อง
+             กรุณาระบุชื่อผู้ใช้ภาษาไทยให้ถูกต้อง
         </div>
     </div>
 

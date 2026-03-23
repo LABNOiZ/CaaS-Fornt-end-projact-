@@ -31,7 +31,7 @@
           <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
              <ExclamationTriangleIcon class="h-6 w-6 text-orange-500" />
           </div>
-          <h3 class="text-lg font-bold text-gray-800">ยืนยันการปิด 2FA</h3>
+          <h3 class="text-lg font-bold text-gray-800">ยืนยันการรีเซ็ต 2FA</h3>
         </div>
 
         <div class="flex flex-col items-center text-center mb-6">

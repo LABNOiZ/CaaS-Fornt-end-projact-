@@ -80,12 +80,11 @@ const events = [
 
 // เช็คเงื่อนไขการจับเวลา
 const shouldTrackTime = () => {
-  // 🌟 อัปเดตตรงนี้: เปลี่ยนจากการหา 'token' เป็นการเช็ค flag 'is_logged_in' แทน
+  //  อัปเดตตรงนี้: เปลี่ยนจากการหา 'token' เป็นการเช็ค flag 'is_logged_in' แทน
   const isLoggedIn = sessionStorage.getItem("is_logged_in") === 'true';
   const isPublicPage = ["/login", "/login-2fa", "/two-factor-intro"].includes(
     route.path,
   );
-  // ถ้า Modal ขึ้นอยู่ ไม่ต้อง Reset Timer
   return isLoggedIn && !isPublicPage && !showTimeoutModal.value;
 };
 

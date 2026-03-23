@@ -159,57 +159,60 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    console.log(`Verifying OTP Setup for ${email}...`)
-    const response = await authService.verify2FA(email, otpCode)
-    const data = response.data
-    
-    // 🌟 เช็คแค่ว่าสำเร็จไหม (Token ถูกแนบเป็น Cookie ไปแล้ว)
-    if (data.message === 'Verify Success' || response.status === 200) {
+    const origin = sessionStorage.getItem('setupOrigin')
+
+    if (origin === 'settings') {
+        console.log(`Confirming OTP Setup for ${email}...`)
+        const response = await authService.confirmSetup2FA(email, otpCode)
         
-        // 🌟 สร้างบัตรผ่านด่านหลอกให้ Vue Router
-        sessionStorage.setItem('token', 'BFF_SESSION_ACTIVE')
-
-        let userRoleId = data.roleId || data.role || data.user?.roleId 
-
-        if (!userRoleId && data.idToken) {
-            try {
-                const decodedToken = jwtDecode(data.idToken)
-                
-                // 🛡️ เช็ค Nonce 
-                const storedNonce = sessionStorage.getItem('authNonce');
-                if (storedNonce && decodedToken.nonce) {
-                    if (decodedToken.nonce !== storedNonce) {
-                        console.error("🚨 Security Breach: Nonce Mismatch!");
-                        sessionStorage.clear();
-                        throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch)");
-                    }
-                    console.log("✅ ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
-                    sessionStorage.removeItem('authNonce');
-                    sessionStorage.removeItem('authState');
-                }
-
-                userRoleId = decodedToken.roleId || decodedToken.role 
-            } catch (err) {
-                console.error("Failed to decode token:", err)
-            }
-        }
-
-        if (userRoleId) {
-            sessionStorage.setItem('roleId', Number(userRoleId))
-        }
-        
-        const origin = sessionStorage.getItem('setupOrigin')
-        
-        if (origin === 'settings') {
+        if (response.status === 200 || response.data?.message === 'Verify Success') {
             sessionStorage.removeItem('setupOrigin')
-            if (Number(userRoleId) === 4) router.push({ name: 'CallCenter2FA' })
-            else router.push({ name: 'SettingsTwoFactor' }) 
-        } else {
+            const userRoleId = Number(sessionStorage.getItem('roleId'))
+            
+            sessionStorage.clear()
+            localStorage.clear()
+            
+            router.push('/install/two-factor-complete') 
+            
+            return
+        }
+    } 
+    else {
+        console.log(`Verifying OTP Login for ${email}...`)
+        const response = await authService.verify2FA(email, otpCode)
+        const data = response.data
+        
+        if (data.message === 'Verify Success' || response.status === 200) {
+            sessionStorage.setItem('token', 'BFF_SESSION_ACTIVE')
+
+            let userRoleId = data.roleId || data.role || data.user?.roleId 
+
+            if (!userRoleId && data.idToken) {
+                try {
+                    const decodedToken = jwtDecode(data.idToken)
+                    
+                    const storedNonce = sessionStorage.getItem('authNonce');
+                    if (storedNonce && decodedToken.nonce) {
+                        if (decodedToken.nonce !== storedNonce) {
+                            sessionStorage.clear();
+                            throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch)");
+                        }
+                        sessionStorage.removeItem('authNonce');
+                        sessionStorage.removeItem('authState');
+                    }
+
+                    userRoleId = decodedToken.roleId || decodedToken.role 
+                } catch (err) {
+                    console.error("Failed to decode token:", err)
+                }
+            }
+
+            if (userRoleId) {
+                sessionStorage.setItem('roleId', Number(userRoleId))
+            }
+            
             router.push('/install/two-factor-complete') 
         }
-
-    } else {
-        throw new Error("Invalid response from server")
     }
 
   } catch (error) {
@@ -231,7 +234,7 @@ const handleSubmit = async () => {
     } else if (error.request) {
         errorMessage.value = 'ไม่สามารถเชื่อมต่อ Server ได้'
     } else {
-        errorMessage.value = error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
+        errorMessage.value = error.message || 'เกิดข้อผิดพลาด'
     }
   } finally {
     isLoading.value = false

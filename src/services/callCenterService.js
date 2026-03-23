@@ -1,6 +1,7 @@
+
 import api from './api' 
 
-// 1. ค้นหาลูกค้า (ข้อมูลผลลัพธ์แค่ชื่อเบื้องต้น ไม่ต้องเข้ารหัส)
+// 1. ค้นหาลูกค้า 
 export const searchCustomer = (payload) => {
   return api.post('/web/call-center/search', payload, { secure: true })
 }
@@ -25,9 +26,9 @@ export const getCardTracking = (cardId) => {
     return api.post('/web/call-center/card/tracking', { cardId: cardId }, { secure: true })
 }
 
-// 5. ส่งคำร้องขอเปลี่ยนที่อยู่ (มีข้อมูลที่อยู่ลูกค้าใหม่)
+// 5. ส่งคำร้องขอเปลี่ยนที่อยู่ 
 export const requestAddressChange = (payload) => {
-    return api.post('/web/call-center/card/address-change/request', payload, { secure: true })
+    return api.post('/web/call-center/card/address-change', payload, { secure: true }) 
 }
 
 // 6. ดูประวัติคำร้องขอเปลี่ยนที่อยู่ 
@@ -38,4 +39,8 @@ export const getAddressChangeHistory = (userId) => {
 // 7 ดู Log กิจกรรมลูกค้า
 export const getCustomerActivities = (payload) => {
     return api.post('/web/call-center/customer/activities', payload, { secure: true })
+}
+
+export const cancelAddressChange = (requestId, reason) => {
+    return api.post('/web/call-center/card/address-change/cancel', { requestId: requestId, callcenterReason: reason }, { secure: true })
 }

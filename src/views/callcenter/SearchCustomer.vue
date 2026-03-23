@@ -208,7 +208,6 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-// 🎯 Import DocumentDuplicateIcon เข้ามาใช้งาน
 import { MagnifyingGlassIcon, ChevronRightIcon, ArrowPathIcon, ExclamationCircleIcon, UsersIcon, ChevronLeftIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 import { searchCustomer } from '@/services/callCenterService' 
 
@@ -216,7 +215,7 @@ import { searchCustomer } from '@/services/callCenterService'
 const isLoading = ref(false)
 const hasSearched = ref(false)
 const isError = ref(false)
-// 🎯 State สำหรับเก็บข้อมูลที่กำลังถูกคัดลอก เพื่อใช้แสดง Tooltip "คัดลอกแล้ว!"
+// State สำหรับเก็บข้อมูลที่กำลังถูกคัดลอก เพื่อใช้แสดง Tooltip "คัดลอกแล้ว!"
 const copiedText = ref('')
 
 const searchForm = reactive({
@@ -245,14 +244,13 @@ onMounted(() => {
     }
 })
 
-// 🎯 ฟังก์ชันสำหรับคัดลอกข้อความ
+//  ฟังก์ชันสำหรับคัดลอกข้อความ
 const copyToClipboard = async (text) => {
     if (!text) return
     try {
         await navigator.clipboard.writeText(text)
-        copiedText.value = text // เซ็ตข้อความให้ตรงกับ Tooltip ที่จะแสดง
+        copiedText.value = text 
         
-        // ให้ Tooltip คัดลอกแล้ว! หายไปหลังจากผ่านไป 2 วินาที
         setTimeout(() => {
             if (copiedText.value === text) {
                 copiedText.value = ''
@@ -263,7 +261,6 @@ const copyToClipboard = async (text) => {
     }
 }
 
-// Computed
 const paginatedResults = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage
     const end = start + itemsPerPage

@@ -63,12 +63,9 @@ import bgLogin from '@/assets/bg-login_1.png'
 import { ShieldCheckIcon, PlusIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
-
-// ดึง Email จาก Session ที่หน้า TwoFactorCard ฝังไว้
 const email = sessionStorage.getItem('install_email') || sessionStorage.getItem('auth_email')
 
 const goNext = () => {
-    // ส่ง Email แนบไปกับ URL เลย เพื่อกันเหนียว
     router.push({
         path: '/install/two-factor-qr',
         query: { email: email }

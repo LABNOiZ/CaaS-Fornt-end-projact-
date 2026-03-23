@@ -173,13 +173,11 @@ const handleVerify = async () => {
     const response = await authService.verifyLogin2FA(email.value, otpCode)
     const data = response.data
     
-    // 🌟 เช็คความสำเร็จ
     if (data.message === '2FA Verified Success' || response.status === 200) {
         
         const storedNonce = sessionStorage.getItem('authNonce');
         sessionStorage.removeItem('auth_email'); 
         
-        // 🌟 แจกบัตรผ่านด่านให้ Vue Router
         sessionStorage.setItem('is_logged_in', 'true');
         
         try {
@@ -191,19 +189,19 @@ const handleVerify = async () => {
                 const decodedProfile = jwtDecode(tokenToDecode);
                 console.log("ถอดรหัส idToken สำเร็จ:", decodedProfile);
                 
-                // 🛡️ เช็ค Nonce 
+                //  เช็ค Nonce 
                 if (storedNonce && decodedProfile.nonce) {
                     if (decodedProfile.nonce !== storedNonce) {
-                        console.error("🚨 Security Breach: Nonce Mismatch!");
+                        console.error(" Security Breach: Nonce Mismatch!");
                         sessionStorage.clear(); 
                         throw new Error("Security Alert: ตรวจพบความเสี่ยงด้านความปลอดภัย (Nonce Mismatch)");
                     }
-                    console.log("✅ ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
+                    console.log(" ยืนยันความปลอดภัย: Nonce ตรงกันเป๊ะ!");
                     sessionStorage.removeItem('authNonce');
                     sessionStorage.removeItem('authState');
                 }
 
-                // 🌟 ดึง Role อย่างรอบคอบ (เผื่อชื่อ Key เปลี่ยนไป)
+                // ดึง Role อย่างรอบคอบ (เผื่อชื่อ Key เปลี่ยนไป)
                 userRole = decodedProfile.roleId || decodedProfile.role || decodedProfile.user_role;
                 
             } else if (data.roleId || data.role || data.user?.roleId || data.user?.role) {
@@ -211,7 +209,7 @@ const handleVerify = async () => {
             }
             
             userRole = Number(userRole)
-            console.log("🔥 ได้รับ Role ID คือ:", userRole)
+            console.log(" ได้รับ Role ID คือ:", userRole)
 
             if (!userRole || isNaN(userRole)) {
                 throw new Error("Critical: ไม่สามารถระบุข้อมูลสิทธิ์ (Role) จากระบบได้")
@@ -235,7 +233,7 @@ const handleVerify = async () => {
 
         } catch (innerError) {
             console.error("Authorization Error:", innerError)
-            sessionStorage.removeItem('is_logged_in') // ยึดบัตรคืน
+            sessionStorage.removeItem('is_logged_in') 
             throw new Error(innerError.message || 'ไม่สามารถระบุสิทธิ์การใช้งานได้ กรุณาติดต่อผู้ดูแลระบบ')
         }
     } else {
